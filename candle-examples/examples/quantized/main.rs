@@ -8,8 +8,8 @@ use clap::{Parser, ValueEnum};
 use std::io::Write;
 use tokenizers::Tokenizer;
 
-use candle::quantized::{ggml_file, gguf_file};
 use candle::Tensor;
+use candle::quantized::{ggml_file, gguf_file};
 use candle_transformers::generation::{LogitsProcessor, Sampling};
 
 use candle_examples::token_output_stream::TokenOutputStream;
@@ -298,10 +298,6 @@ struct Args {
     /// Group-Query Attention, use 8 for the 70B version of LLaMAv2.
     #[arg(long)]
     gqa: Option<usize>,
-
-    /// Use the slower dmmv cuda kernel.
-    #[arg(long)]
-    force_dmmv: bool,
 }
 
 impl Args {
@@ -438,12 +434,6 @@ fn main() -> anyhow::Result<()> {
     use tracing_subscriber::prelude::*;
 
     let args = Args::parse();
-
-    #[cfg(feature = "cuda")]
-    candle::quantized::cuda::set_force_dmmv(args.force_dmmv);
-
-    candle::cuda::set_gemm_reduced_precision_f16(true);
-    candle::cuda::set_gemm_reduced_precision_bf16(true);
 
     let _guard = if args.tracing {
         let (chrome_layer, guard) = ChromeLayerBuilder::new().build();
