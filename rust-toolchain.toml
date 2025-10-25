@@ -1,0 +1,9 @@
+[toolchain]
+channel = "nightly"
+components = [
+    "llvm-bitcode-linker",
+    "llvm-tools",
+    "miri",
+    "rust-analyzer",
+    "rustc-codegen-cranelift",
+]

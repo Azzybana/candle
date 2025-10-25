@@ -9,6 +9,11 @@ categories.workspace = true
 license.workspace = true
 readme = "README.md"
 
+[lib]
+name = "candle_nn"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
 candle = { workspace = true }
@@ -32,11 +37,18 @@ criterion = { workspace = true }
 
 [features]
 default = []
-accelerate = ["dep:accelerate-src", "candle/accelerate"]
-cuda = ["candle/cuda"]
-cudnn = ["candle/cudnn"]
-mkl = ["dep:intel-mkl-src", "candle/mkl"]
-metal = ["candle/metal", "dep:candle-metal-kernels", "dep:objc2-metal"]
+accelerate = [
+    "dep:accelerate-src",
+    "candle/accelerate",
+] # Use Accelerate framework on macOS
+cuda = ["candle/cuda"] # Enable CUDA acceleration
+cudnn = ["candle/cudnn"] # Enable cuDNN with CUDA
+mkl = ["dep:intel-mkl-src", "candle/mkl"] # Use Intel MKL for BLAS
+metal = [
+    "candle/metal",
+    "dep:candle-metal-kernels",
+    "dep:objc2-metal",
+] # Enable Metal acceleration on macOS
 
 [[bench]]
 name = "bench_main"

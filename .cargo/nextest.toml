@@ -1,0 +1,103 @@
+# Optimal nextest.toml configuration for thorough Rust testing
+# Based on cargo-nextest documentation and best practices
+
+[store]
+# Directory for nextest data storage
+dir = "target/nextest"
+
+# Default profile for development
+[profile.default]
+# Run all tests even if some fail - ensures comprehensive test execution
+fail-fast = false
+
+# Mark tests as slow if they take more than 5 seconds
+# Kill tests that don't complete within 10 seconds (2 periods of 5s each)
+slow-timeout = { period = "5s", terminate-after = 2, grace-period = "2s" }
+
+# Retry failed tests up to 2 times to handle flaky tests
+retries = 2
+
+# Show comprehensive test status information
+status-level = "pass"
+final-status-level = "flaky"
+
+# Output failure details immediately and at the end for better debugging
+failure-output = "immediate-final"
+success-output = "never"
+
+# Use all available CPU cores for parallel test execution
+test-threads = "num-cpus"
+
+# Global timeout of 1 hour to prevent runaway test suites
+global-timeout = "1h"
+
+# Enable JUnit reporting for CI integration
+[profile.default.junit]
+path = "junit.xml"
+report-name = "nextest-run"
+store-success-output = false
+store-failure-output = true
+
+# CI profile - optimized for continuous integration
+[profile.ci]
+# Inherit from default but override for CI-specific needs
+fail-fast = false
+slow-timeout = { period = "5s", terminate-after = 2, grace-period = "2s" }
+retries = 3                                                                # More retries in CI to handle environmental flakiness
+status-level = "pass"
+final-status-level = "flaky"
+failure-output = "immediate-final"
+success-output = "never"
+test-threads = "num-cpus"
+global-timeout = "30m"                                                     # Shorter global timeout for CI efficiency
+
+# Enhanced JUnit reporting for CI
+[profile.ci.junit]
+path = "junit.xml"
+report-name = "nextest-ci-run"
+store-success-output = false
+store-failure-output = true
+
+# Archive configuration for CI caching
+[[profile.ci.archive.include]]
+path = "target/debug"
+relative-to = "."
+depth = 3
+
+# Profile for quick development iteration
+[profile.dev]
+fail-fast = true                                                            # Stop on first failure for faster feedback
+slow-timeout = { period = "10s", terminate-after = 3, grace-period = "5s" } # More lenient timeouts
+retries = 0                                                                 # No retries for faster iteration
+status-level = "pass"
+final-status-level = "fail"
+failure-output = "immediate"
+success-output = "never"
+test-threads = 4                                                            # Limit threads for better system responsiveness
+
+# Profile for stress testing
+[profile.stress]
+fail-fast = false
+slow-timeout = { period = "30s", terminate-after = 10, grace-period = "10s" } # Very lenient for stress tests
+retries = 5
+status-level = "all"
+final-status-level = "all"
+failure-output = "immediate-final"
+success-output = "never"
+test-threads = "num-cpus"
+global-timeout = "4h"                                                         # Long timeout for comprehensive stress testing
+
+# Custom test group for heavy tests (if needed)
+[test-groups.heavy]
+max-threads = 2
+
+# Override for integration tests to be more lenient
+[[profile.default.overrides]]
+filter = 'test(integration)'
+slow-timeout = { period = "30s", terminate-after = 6, grace-period = "5s" } # 3 minutes total
+threads-required = 2                                                        # Integration tests might need more resources
+
+# Override for unit tests to be stricter
+[[profile.default.overrides]]
+filter = 'test(unit)'
+slow-timeout = { period = "2s", terminate-after = 5, grace-period = "1s" } # 10 seconds total

@@ -9,6 +9,11 @@ categories.workspace = true
 license.workspace = true
 readme = "README.md"
 
+[lib]
+name = "candle_transformers"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
 byteorder = { workspace = true }
@@ -27,9 +32,20 @@ tracing = { workspace = true }
 
 [features]
 default = []
-accelerate = ["dep:accelerate-src", "candle/accelerate", "candle-nn/accelerate"]
-cuda = ["candle/cuda", "candle-nn/cuda"]
-cudnn = ["candle/cudnn", "candle-nn/cudnn"]
-flash-attn = ["cuda", "dep:candle-flash-attn"]
-mkl = ["dep:intel-mkl-src", "candle/mkl", "candle-nn/mkl"]
-metal = ["candle/metal", "candle-nn/metal"]
+accelerate = [
+    "dep:accelerate-src",
+    "candle/accelerate",
+    "candle-nn/accelerate",
+] # Use Accelerate framework on macOS
+cuda = ["candle/cuda", "candle-nn/cuda"] # Enable CUDA acceleration
+cudnn = ["candle/cudnn", "candle-nn/cudnn"] # Enable cuDNN with CUDA
+flash-attn = [
+    "cuda",
+    "dep:candle-flash-attn",
+] # Enable flash attention with CUDA
+mkl = [
+    "dep:intel-mkl-src",
+    "candle/mkl",
+    "candle-nn/mkl",
+] # Use Intel MKL for BLAS
+metal = ["candle/metal", "candle-nn/metal"] # Enable Metal acceleration on macOS

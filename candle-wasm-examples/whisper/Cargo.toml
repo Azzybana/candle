@@ -25,28 +25,13 @@ hound = { workspace = true }
 safetensors = { workspace = true }
 
 # Wasm specific crates.
-getrandom = { version = "0.2", features = ["js"] }
-gloo = "0.11"
-js-sys = "0.3.64"
-wasm-bindgen = "0.2.87"
-wasm-bindgen-futures = "0.4.37"
-wasm-logger = "0.2"
-yew-agent = "0.2.0"
-yew = { version = "0.20.0", features = ["csr"] }
+getrandom = { workspace = true }
+gloo = { workspace = true }
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-futures = { workspace = true }
+wasm-logger = { workspace = true }
+yew-agent = { workspace = true }
+yew = { workspace = true }
 
-[dependencies.web-sys]
-version = "0.3.70"
-features = [
-  'Blob',
-  'Document',
-  'Element',
-  'HtmlElement',
-  'Node',
-  'Window',
-  'Request',
-  'RequestCache',
-  'RequestInit',
-  'RequestMode',
-  'Response',
-  'Performance',
-]
+web-sys = { workspace = true }

@@ -7,6 +7,12 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 license.workspace = true
+readme = "README.md"
+
+[lib]
+name = "tensor_tools"
+path = "src/lib.rs"
+crate-type = ["rlib"]
 
 [dependencies]
 anyhow = { workspace = true }

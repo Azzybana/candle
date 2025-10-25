@@ -11,7 +11,8 @@ readme = "README.md"
 
 [lib]
 name = "candle"
-crate-type = ["cdylib"]
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
@@ -20,15 +21,18 @@ candle-nn = { workspace = true }
 candle-onnx = { workspace = true, optional = true }
 half = { workspace = true }
 intel-mkl-src = { workspace = true, optional = true }
-pyo3 = { version = "0.22.0", features = ["extension-module", "abi3-py311"] }
+pyo3 = { workspace = true }
 float8 = { workspace = true }
 
 [build-dependencies]
-pyo3-build-config = "0.22"
+pyo3-build-config = { workspace = true }
 
 [features]
 default = []
-accelerate = ["dep:accelerate-src", "candle/accelerate"]
-cuda = ["candle/cuda"]
-mkl = ["dep:intel-mkl-src", "candle/mkl"]
-onnx = ["dep:candle-onnx"]
+accelerate = [
+    "dep:accelerate-src",
+    "candle/accelerate",
+] # Use Accelerate framework on macOS
+cuda = ["candle/cuda"] # Enable CUDA acceleration
+mkl = ["dep:intel-mkl-src", "candle/mkl"] # Use Intel MKL for BLAS
+onnx = ["dep:candle-onnx"] # Enable ONNX support

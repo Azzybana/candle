@@ -9,6 +9,11 @@ categories.workspace = true
 license.workspace = true
 readme = "README.md"
 
+[lib]
+name = "candle_core"
+path = "src/lib.rs"
+crate-type = ["rlib"]
+
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
 byteorder = { workspace = true }
@@ -45,16 +50,24 @@ criterion = { workspace = true }
 
 [features]
 default = []
-cuda = ["cudarc", "dep:candle-kernels", "dep:ug-cuda", "float8/cuda"]
-cudnn = ["cuda", "cudarc/cudnn"]
-mkl = ["dep:libc", "dep:intel-mkl-src"]
-accelerate = ["dep:libc", "dep:accelerate-src"]
+cuda = [
+    "cudarc",
+    "dep:candle-kernels",
+    "dep:ug-cuda",
+    "float8/cuda",
+] # Enable CUDA acceleration
+cudnn = ["cuda", "cudarc/cudnn"] # Enable cuDNN with CUDA
+mkl = ["dep:libc", "dep:intel-mkl-src"] # Use Intel MKL for BLAS
+accelerate = [
+    "dep:libc",
+    "dep:accelerate-src",
+] # Use Accelerate framework on macOS
 metal = [
     "dep:objc2-metal",
     "dep:objc2-foundation",
     "dep:candle-metal-kernels",
     "dep:ug-metal",
-]
+] # Enable Metal acceleration on macOS
 
 [[bench]]
 name = "bench_main"
