@@ -46,3 +46,11 @@ out.wav
 bria.mp3
 bria.safetensors
 bria.wav
+.vscode/
+.github/
+!.github/workflows/
+!.github/workflows/**
+!.github/dependabot.yml
+
+
+.vscode/settings.json
