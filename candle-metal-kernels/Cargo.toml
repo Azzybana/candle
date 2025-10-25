@@ -3,7 +3,7 @@ name = "candle-metal-kernels"
 version.workspace = true
 edition.workspace = true
 
-description = "Metal kernels for Candle"
+description.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true

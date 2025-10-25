@@ -1,3 +1,5 @@
+cargo-features = ["profile-rustflags"]
+
 [workspace]
 members = [
     "candle-core",
@@ -10,13 +12,9 @@ members = [
     "candle-transformers",
     "candle-kernels",
     "tensor-tools",
-]
-exclude = [
-    "candle-wasm-examples/*",
-    "candle-wasm-tests",
-    "candle-pyo3",
     "candle-metal-kernels",
 ]
+exclude = ["candle-wasm-examples/*", "candle-wasm-tests", "candle-pyo3"]
 resolver = "3"
 
 [workspace.package]
@@ -153,7 +151,7 @@ zip = { version = "6.*", default-features = false }
 inherits = "release"
 debug = true
 
-[profile.debug]
+[profile.dev]
 opt-level = 1
 
 [profile.release]
@@ -162,11 +160,5 @@ lto = "fat"
 codegen-units = 1
 panic = "abort"
 strip = true
-relocation-model = "static"
-relro-level = "off"
+rustflags = ["-C", "relocation-model=static", "-C", "relro-level=off"]
 overflow-checks = false
-
-[lints.clippy]
-all = "deny"
-restricted = "allow"
-nursery = "allow"

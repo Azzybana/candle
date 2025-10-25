@@ -43,6 +43,4 @@ audit = "audit"
 [unstable]
 advanced-env = true
 codegen-backend = true
-build-std = true
-check-cfg = true
-tune-cpu = true
+build-std = ["std"]
