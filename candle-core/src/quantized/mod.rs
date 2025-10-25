@@ -5,7 +5,6 @@ use std::borrow::Cow;
 
 #[cfg(target_feature = "avx2")]
 pub mod avx;
-mod dummy_cuda;
 mod dummy_metal;
 pub mod ggml_file;
 pub mod gguf_file;

@@ -9,15 +9,13 @@
 #[cfg(feature = "mkl")]
 extern crate intel_mkl_src;
 
-use anyhow::{bail, Error as E, Result};
+use anyhow::{Error as E, Result, bail};
 use clap::{Parser, ValueEnum};
 
 use candle::{DType, Device, Tensor};
 use candle_transformers::generation::LogitsProcessor;
 use candle_transformers::models::llama::LlamaEosToks;
-use cudarc::driver::safe::CudaDevice;
-use cudarc::nccl::safe::{Comm, Id};
-use hf_hub::{api::sync::Api, Repo, RepoType};
+use hf_hub::{Repo, RepoType, api::sync::Api};
 use std::io::Write;
 use std::rc::Rc;
 
@@ -166,7 +164,6 @@ fn main() -> Result<()> {
         let id: Id = Id::uninit(internal);
         id
     };
-    let device = CudaDevice::new(rank)?;
     let comm = match Comm::from_rank(device, rank, num_shards, id) {
         Ok(comm) => Rc::new(comm),
         Err(err) => anyhow::bail!("nccl error {:?}", err.0),
@@ -176,7 +173,6 @@ fn main() -> Result<()> {
     }
     println!("Rank {rank:?} spawned");
 
-    let device = Device::new_cuda(rank)?;
     let cache = model::Cache::new(dtype, &config, &device)?;
 
     println!("building the model");

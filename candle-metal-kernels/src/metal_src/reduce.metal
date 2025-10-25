@@ -522,7 +522,7 @@ struct block_reducer {
     }
 };
 
-// Inspired by "Optimizing Parallel Reduction in CUDA" by Mark Harris
+// Inspired by "Optimizing Parallel Reduction in C.U.D.A." by Mark Harris
 template<
     typename T,
     typename R,

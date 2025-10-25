@@ -1,4 +1,4 @@
-use candle_core::{test_device, DType, Device, IndexOp, Result, Tensor};
+use candle_core::{DType, Device, IndexOp, Result, Tensor, test_device};
 
 fn matmul(device: &Device) -> Result<()> {
     let data = vec![1.0f32, 2.0, 3.0, 4.0];
@@ -75,7 +75,6 @@ fn broadcast_matmul(device: &Device) -> Result<()> {
             let rhs = rhs.i(idx2)?;
             let out2 = lhs.matmul(&rhs);
             let sum_diff2 = (out - out2)?.sqr()?.sum_all()?;
-            // With cuda, we see errors of up to ~1e-12.
             assert!(sum_diff2.to_vec0::<f32>()? < 1e-6)
         }
     }

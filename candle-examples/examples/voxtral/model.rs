@@ -221,14 +221,8 @@ fn transcribe_with_voxtral(
 fn load_model_weights<'a>(model_files: &'a [PathBuf], device: &Device) -> Result<VarBuilder<'a>> {
     let dtype = DType::F16; // F16 for memory efficiency
 
-    // MEMORY OPTIMIZATION: Force garbage collection before loading
-    // CUDA synchronization removed
-
     // Use memory-mapped loading for efficiency (confirmed better than regular loading)
     let vb = unsafe { VarBuilder::from_mmaped_safetensors(model_files, dtype, device)? };
-
-    // MEMORY OPTIMIZATION: Force garbage collection after loading
-    // CUDA synchronization removed
 
     Ok(vb)
 }

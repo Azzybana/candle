@@ -1,4 +1,4 @@
-use candle_core::{test_device, test_utils, DType, Device, IndexOp, Result, Tensor, D};
+use candle_core::{D, DType, Device, IndexOp, Result, Tensor, test_device, test_utils};
 use float8::F8E4M3;
 
 fn zeros(device: &Device) -> Result<()> {
@@ -897,21 +897,6 @@ fn index_select_fail() -> Result<()> {
     assert!(hs.is_err());
     Ok(())
 }
-
-// The test below triggers an unwinding panic as there is a panic within the
-// #[cfg(feature = "cuda")]
-// #[test]
-// #[should_panic]
-// fn index_select_fail_gpu() {
-//     // Check that a panic happens for out of bounds in cuda
-//     if let Ok(device) = Device::new_cuda(0) {
-//         if let Ok(ids) = Tensor::new(&[4u32, 2u32, 1u32], &device) {
-//             if let Ok(t) = Tensor::new(&[[0f32, 1f32], [2f32, 3f32], [4f32, 5f32]], &device) {
-//                 let _ = t.index_select(&ids, 0);
-//             }
-//         }
-//     }
-// }
 
 fn cmp(device: &Device) -> Result<()> {
     let t1 = Tensor::new(&[[0f32, 1f32], [2f32, 3f32], [4f32, 5f32]], device)?;

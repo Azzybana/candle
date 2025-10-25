@@ -1,8 +1,7 @@
 use candle::backend::BackendStorage;
-use candle::{CpuStorage, CustomOp1, DType, Device, IndexOp, Layout, Result, Shape, Tensor, D};
+use candle::{CpuStorage, CustomOp1, D, DType, Device, IndexOp, Layout, Result, Shape, Tensor};
 use candle_nn::var_builder::ShardedVarBuilder as VarBuilder;
 use candle_nn::{Embedding, Linear, Module, RmsNorm};
-use cudarc::nccl::safe::{Comm, ReduceOp};
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
@@ -44,48 +43,6 @@ impl CustomOp1 for AllReduce {
 
     fn cpu_fwd(&self, _s: &CpuStorage, _l: &Layout) -> Result<(CpuStorage, Shape)> {
         candle::bail!("AllReduce is never used on cpu")
-    }
-
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(
-        &self,
-        s: &candle::CudaStorage,
-        l: &Layout,
-    ) -> Result<(candle::CudaStorage, Shape)> {
-        use candle::cuda_backend::WrapErr;
-        use cudarc::driver::DeviceSlice;
-        use half::{bf16, f16};
-
-        let elem_count = l.shape().elem_count();
-        let dev = s.device().clone();
-        let dst = match s.dtype() {
-            DType::BF16 => {
-                let s = s.as_cuda_slice::<bf16>()?;
-                let s = match l.contiguous_offsets() {
-                    Some((0, l)) if l == s.len() => s,
-                    Some(_) | None => candle::bail!("input has to be contiguous"),
-                };
-                let mut dst = unsafe { dev.alloc::<bf16>(elem_count) }.w()?;
-                self.comm
-                    .all_reduce(s, &mut dst, &ReduceOp::Sum)
-                    .map_err(candle::Error::debug)?;
-                candle::CudaStorage::wrap_cuda_slice(dst, dev)
-            }
-            DType::F16 => {
-                let s = s.as_cuda_slice::<f16>()?;
-                let s = match l.contiguous_offsets() {
-                    Some((0, l)) if l == s.len() => s,
-                    Some(_) | None => candle::bail!("input has to be contiguous"),
-                };
-                let mut dst = unsafe { dev.alloc::<f16>(elem_count) }.w()?;
-                self.comm
-                    .all_reduce(s, &mut dst, &ReduceOp::Sum)
-                    .map_err(candle::Error::debug)?;
-                candle::CudaStorage::wrap_cuda_slice(dst, dev)
-            }
-            dtype => candle::bail!("unsupported dtype {dtype:?}"),
-        };
-        Ok((dst, l.shape().clone()))
     }
 }
 
