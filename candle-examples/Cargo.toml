@@ -15,11 +15,9 @@ candle = { workspace = true }
 candle-datasets = { workspace = true, optional = true }
 candle-nn = { workspace = true }
 candle-transformers = { workspace = true }
-candle-flash-attn = { workspace = true, optional = true }
 candle-onnx = { workspace = true, optional = true }
 
 csv = { workspace = true }
-cudarc = { workspace = true, optional = true }
 half = { workspace = true, optional = true }
 hf-hub = { workspace = true, features = ["tokio"] }
 image = { workspace = true }
@@ -55,7 +53,6 @@ tokio = { workspace = true }
 
 [build-dependencies]
 anyhow = { workspace = true }
-bindgen_cuda = { workspace = true, optional = true }
 hf-hub = { workspace = true, features = ["tokio"] }
 
 [features]
@@ -66,29 +63,12 @@ accelerate = [
     "candle-nn/accelerate",
     "candle-transformers/accelerate",
 ] # Use Accelerate framework on macOS
-cuda = [
-    "candle/cuda",
-    "candle-nn/cuda",
-    "candle-transformers/cuda",
-    "dep:bindgen_cuda",
-] # Enable CUDA acceleration
-cudnn = [
-    "candle/cudnn",
-    "candle-nn/cudnn",
-    "candle-transformers/cudnn",
-] # Enable cuDNN with CUDA
-flash-attn = [
-    "cuda",
-    "candle-transformers/flash-attn",
-    "dep:candle-flash-attn",
-] # Enable flash attention with CUDA
 mkl = [
     "dep:intel-mkl-src",
     "candle/mkl",
     "candle-nn/mkl",
     "candle-transformers/mkl",
 ] # Use Intel MKL for BLAS
-nccl = ["cuda", "cudarc/nccl", "dep:half"] # Enable NCCL for multi-GPU
 onnx = ["candle-onnx"] # Enable ONNX support
 metal = ["candle/metal", "candle-nn/metal"] # Enable Metal acceleration on macOS
 microphone = ["cpal", "rubato"] # Enable microphone input
@@ -98,10 +78,6 @@ snac = ["cpal", "symphonia", "rubato"] # Enable SNAC
 depth_anything_v2 = ["palette", "enterpolation"] # Enable Depth Anything V2
 tekken = ["tekken-rs"] # Enable Tekken
 buildtime-download = [] # Enable build-time downloads
-
-[[example]]
-name = "llama_multiprocess"
-required-features = ["cuda", "nccl", "flash-attn"]
 
 [[example]]
 name = "reinforcement-learning"

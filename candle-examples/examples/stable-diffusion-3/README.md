@@ -34,7 +34,7 @@ On the first run, the weights will be automatically downloaded from the Huggingf
 ## Running the model
 
 ```shell
-cargo run --example stable-diffusion-3 --release --features=cuda -- \
+cargo run --example stable-diffusion-3 --release -- \
   --which 3-medium --height 1024 --width 1024 \
   --prompt 'A cute rusty robot holding a candle torch in its hand, with glowing neon text \"LETS GO RUSTY\" displayed on its chest, bright background, high quality, 4k'
 ```
@@ -44,20 +44,14 @@ To use different models, changed the value of `--which` option. (Possible values
 To display other options available,
 
 ```shell
-cargo run --example stable-diffusion-3 --release --features=cuda -- --help
-```
-
-If GPU supports, Flash-Attention is a strongly recommended feature as it can greatly improve the speed of inference, as MMDiT is a transformer model heavily depends on attentions. To utilize [candle-flash-attn](https://github.com/huggingface/candle/tree/main/candle-flash-attn) in the demo, you will need both `--features flash-attn` and `--use-flash-attn`.
-
-```shell
-cargo run --example stable-diffusion-3 --release --features=cuda,flash-attn -- --use-flash-attn ...
+cargo run --example stable-diffusion-3 --release -- --help
 ```
 
 ## Performance Benchmark
 
 Below benchmark is done with Stable Diffusion 3 Medium by generating 1024-by-1024 image from 28 steps of Euler sampling and measure the average speed (iteration per seconds).
 
-[candle](https://github.com/huggingface/candle) and [candle-flash-attn](https://github.com/huggingface/candle/tree/main/candle-flash-attn) is based on the commit of [0d96ec3](https://github.com/huggingface/candle/commit/0d96ec31e8be03f844ed0aed636d6217dee9c7bc).
+[candle](https://github.com/huggingface/candle) is based on the commit of [0d96ec3](https://github.com/huggingface/candle/commit/0d96ec31e8be03f844ed0aed636d6217dee9c7bc).
 
 System specs (Desktop PCIE 5 x8/x8 dual-GPU setup):
 

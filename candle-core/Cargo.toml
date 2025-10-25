@@ -17,11 +17,9 @@ crate-type = ["rlib"]
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
 byteorder = { workspace = true }
-candle-kernels = { workspace = true, optional = true }
 candle-metal-kernels = { workspace = true, optional = true }
 objc2-metal = { workspace = true, optional = true }
 objc2-foundation = { workspace = true, optional = true }
-cudarc = { workspace = true, optional = true }
 gemm = { workspace = true }
 half = { workspace = true }
 float8 = { workspace = true }
@@ -40,7 +38,6 @@ zip = { workspace = true }
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "ios")))'.dependencies]
 ug = { workspace = true }
-ug-cuda = { workspace = true, optional = true }
 ug-metal = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -50,13 +47,6 @@ criterion = { workspace = true }
 
 [features]
 default = []
-cuda = [
-    "cudarc",
-    "dep:candle-kernels",
-    "dep:ug-cuda",
-    "float8/cuda",
-] # Enable CUDA acceleration
-cudnn = ["cuda", "cudarc/cudnn"] # Enable cuDNN with CUDA
 mkl = ["dep:libc", "dep:intel-mkl-src"] # Use Intel MKL for BLAS
 accelerate = [
     "dep:libc",
@@ -76,7 +66,3 @@ harness = false
 [[example]]
 name = "metal_basics"
 required-features = ["metal"]
-
-[[example]]
-name = "cuda_basics"
-required-features = ["cuda"]

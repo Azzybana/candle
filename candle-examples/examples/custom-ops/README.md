@@ -1,7 +1,7 @@
 # candle-custom-ops
 
  This example illustrates how to implement forward and backward passes for custom operations on the CPU and GPU.
- The custom op in this example implements RMS normalization for the CPU and CUDA.
+ The custom op in this example implements RMS normalization for the CPU.
  
 ## Running an example
 

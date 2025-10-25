@@ -7,7 +7,7 @@ version, and a 2b and a 9b variant for v2.
 ## Running the example
 
 ```bash
-$ cargo run --example gemma --features cuda -r -- \
+$ cargo run --example gemma -r -- \
     --prompt "Here is a proof that square root of 2 is not rational: "
 
 Here is a proof that square root of 2 is not rational:
@@ -23,5 +23,3 @@ In order to use the v1 examples, you have to accept the license on the
 [HuggingFace Hub Gemma repo](https://huggingface.co/google/gemma-7b) and set up
 your access token via the [HuggingFace cli login
 command](https://huggingface.co/docs/huggingface_hub/guides/cli#huggingface-cli-login).
-
-

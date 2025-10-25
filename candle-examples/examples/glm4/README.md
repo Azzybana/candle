@@ -11,19 +11,19 @@ GLM-4-9B-0414 is a new architecture in the GLM-4 series developed by Zhipu AI. T
 - [GitHub](https://github.com/THUDM/GLM4)
 - [GLM-4-9B Weight](https://huggingface.co/THUDM/glm-4-9b)
 
-### Running with CUDA 
+### Running
 Use `--which` to distinguish two archs
 
 ```bash
-cargo run --example glm4 --release --features cuda -- --which "glm4-new" --model-id THUDM/GLM-4-9B-0414 --prompt "How are you today?"
-cargo run --example glm4 --release --features cuda -- --which "glm4-old" --model-id THUDM/glm-4-9b --prompt "How are you today?"
+cargo run --example glm4 --release -- --which "glm4-new" --model-id THUDM/GLM-4-9B-0414 --prompt "How are you today?"
+cargo run --example glm4 --release -- --which "glm4-old" --model-id THUDM/glm-4-9b --prompt "How are you today?"
 ```
 
-### Running with local file (CUDA)
+### Running with local file
 
 ```bash
-cargo run --example glm4 --release --features cuda -- --which "glm4-new" --weight-path /path/GLM-4-9B-0414 --prompt "How are you today?"
-cargo run --example glm4 --release --features cuda -- --which "glm4-old" --weight-path /path/glm-4-9b --prompt "How are you today?"
+cargo run --example glm4 --release -- --which "glm4-new" --weight-path /path/GLM-4-9B-0414 --prompt "How are you today?"
+cargo run --example glm4 --release -- --which "glm4-old" --weight-path /path/glm-4-9b --prompt "How are you today?"
 ```
 
 ### Running with local file (Metal)

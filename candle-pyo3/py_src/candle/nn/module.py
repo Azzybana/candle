@@ -508,7 +508,7 @@ class Module:
         if isinstance(tensor, Tensor):
             return tensor.to_device(device)
         else:
-            raise NotImplementedError("Cannot offload QTensor to cuda, yet!")
+            raise NotImplementedError("Cannot offload QTensor to device, yet!")
 
     def device(self) -> str:
         """
@@ -520,25 +520,6 @@ class Module:
         else:
             # QTensors can only be on the CPU
             return "cpu"
-
-    def cuda(self: T) -> T:
-        r"""Moves all model parameters and buffers to the GPU.
-
-        This also makes associated parameters and buffers different objects. So
-        it should be called before constructing optimizer if the module will
-        live on GPU while being optimized.
-
-        .. note::
-            This method modifies the module in-place.
-
-        Returns:
-            Module: self
-        """
-
-        def to_cuda(t: TensorLike):
-            return self.__move_tensor_to_device(t, "cuda")
-
-        return self._apply(to_cuda)
 
     def cpu(self: T) -> T:
         r"""Moves all model parameters and buffers to the CPU.
@@ -624,7 +605,7 @@ class Module:
 
                 if isinstance(arg, str):
                     lower_arg = str(arg).lower()
-                    if lower_arg.startswith("cuda") or lower_arg == "cpu":
+                    if lower_arg == "cpu":
                         device = lower_arg
                     else:
                         dtype = arg

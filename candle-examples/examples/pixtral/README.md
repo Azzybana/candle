@@ -7,7 +7,7 @@ Pixtral-12B is a 12B text+vision model.
 [HF Community Model Card](https://huggingface.co/mistral-community/pixtral-12b).
 
 ```bash
-cargo run --profile=release-with-debug --features cuda --example pixtral -- \
+cargo run --profile=release-with-debug --example pixtral -- \
     --image candle-examples/examples/flux/assets/flux-robot.jpg
 ```
 

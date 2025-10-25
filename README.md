@@ -37,14 +37,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 `cargo run` should display a tensor of shape `Tensor[[2, 4], f32]`.
 
-
-Having installed `candle` with Cuda support, simply define the `device` to be on GPU:
-
-```diff
-- let device = Device::Cpu;
-+ let device = Device::new_cuda(0)?;
-```
-
 For more advanced examples, please have a look at the following section.
 
 ## Check out our examples
@@ -146,9 +138,6 @@ Run them using commands like:
 cargo run --example quantized --release
 ```
 
-In order to use **CUDA** add `--features cuda` to the example command line. If
-you have cuDNN installed, use `--features cudnn` for even more speedups.
-
 There are also some wasm examples for whisper and
 [llama2.c](https://github.com/karpathy/llama2.c). You can either build them with
 `trunk` or try them online:
@@ -204,7 +193,6 @@ If you have an addition to this list, please submit a pull request.
     - Embed user-defined ops/kernels, such as [flash-attention v2](https://github.com/huggingface/candle/blob/89ba005962495f2bfbda286e185e9c3c7f5300a3/candle-flash-attn/src/lib.rs#L152).
 - Backends.
     - Optimized CPU backend with optional MKL support for x86 and Accelerate for macs.
-    - CUDA backend for efficiently running on GPUs, multiple GPU distribution via NCCL.
     - WASM support, run your models in a browser.
 - Included models.
     - Language Models.
@@ -267,7 +255,6 @@ Cheatsheet:
 | Operations | `tensor.view((2, 2))`                    | `tensor.reshape((2, 2))?`                                        |
 | Operations | `a.matmul(b)`                            | `a.matmul(&b)?`                                                  |
 | Arithmetic | `a + b`                                  | `&a + &b`                                                        |
-| Device     | `tensor.to(device="cuda")`               | `tensor.to_device(&Device::new_cuda(0)?)?`                            |
 | Dtype      | `tensor.to(dtype=torch.float16)`         | `tensor.to_dtype(&DType::F16)?`                                  |
 | Saving     | `torch.save({"A": A}, "model.bin")`      | `candle::safetensors::save(&HashMap::from([("A", A)]), "model.safetensors")?` |
 | Loading    | `weights = torch.load("model.bin")`      | `candle::safetensors::load("model.safetensors", &device)`        |
@@ -280,10 +267,8 @@ Cheatsheet:
 - [candle-core](./candle-core): Core ops, devices, and `Tensor` struct definition
 - [candle-nn](./candle-nn/): Tools to build real models
 - [candle-examples](./candle-examples/): Examples of using the library in realistic settings
-- [candle-kernels](./candle-kernels/): CUDA custom kernels
 - [candle-datasets](./candle-datasets/): Datasets and data loaders.
 - [candle-transformers](./candle-transformers): transformers-related utilities.
-- [candle-flash-attn](./candle-flash-attn): Flash attention v2 layer.
 - [candle-onnx](./candle-onnx/): ONNX model evaluation.
 
 ## FAQ
@@ -365,33 +350,6 @@ conditions](https://huggingface.co/meta-llama/Llama-2-7b-hf), and set up your
 authentication token. See issue
 [#350](https://github.com/huggingface/candle/issues/350) for more details.
 
-#### Missing cute/cutlass headers when compiling flash-attn
-
-```
-  In file included from kernels/flash_fwd_launch_template.h:11:0,
-                   from kernels/flash_fwd_hdim224_fp16_sm80.cu:5:
-  kernels/flash_fwd_kernel.h:8:10: fatal error: cute/algorithm/copy.hpp: No such file or directory
-   #include <cute/algorithm/copy.hpp>
-            ^~~~~~~~~~~~~~~~~~~~~~~~~
-  compilation terminated.
-  Error: nvcc error while compiling:
-```
-[cutlass](https://github.com/NVIDIA/cutlass) is provided as a git submodule so you may want to run the following command to check it in properly.
-```bash
-git submodule update --init
-```
-
-#### Compiling with flash-attention fails
-
-```
-/usr/include/c++/11/bits/std_function.h:530:146: error: parameter packs not expanded with ‘...’:
-```
-
-This is a bug in gcc-11 triggered by the Cuda compiler. To fix this, install a different, supported gcc version - for example gcc-10, and specify the path to the compiler in the NVCC_CCBIN environment variable.
-```
-env NVCC_CCBIN=/usr/lib/gcc/x86_64-linux-gnu/10 cargo ...
-```
-
 #### Linking error on windows when running rustdoc or mdbook tests
 
 ```
@@ -419,10 +377,3 @@ This may be caused by the models being loaded from `/mnt/c`, more details on
 
 You can set `RUST_BACKTRACE=1` to be provided with backtraces when a candle
 error is generated.
-
-#### CudaRC error
-
-If you encounter an error like this one `called `Result::unwrap()` on an `Err` value: LoadLibraryExW { source: Os { code: 126, kind: Uncategorized, message: "The specified module could not be found." } }` on windows. To fix copy and rename these 3 files (make sure they are in path). The paths depend on your cuda version.
-`c:\Windows\System32\nvcuda.dll` -> `cuda.dll`
-`c:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\cublas64_12.dll` -> `cublas.dll`
-`c:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\curand64_10.dll` -> `curand.dll`

@@ -14,15 +14,6 @@ impl BenchDevice for Device {
     fn sync(&self) -> Result<()> {
         match self {
             Device::Cpu => Ok(()),
-            Device::Cuda(device) => {
-                #[cfg(feature = "cuda")]
-                {
-                    use candle::backend::BackendDevice;
-                    return Ok(device.synchronize()?);
-                }
-                #[cfg(not(feature = "cuda"))]
-                panic!("Cuda device without cuda feature enabled: {:?}", device)
-            }
             Device::Metal(device) => {
                 #[cfg(feature = "metal")]
                 return Ok(device.wait_until_completed()?);
@@ -44,7 +35,6 @@ impl BenchDevice for Device {
                 };
                 format!("{}_{}", cpu_type, name.into())
             }
-            Device::Cuda(_) => format!("cuda_{}", name.into()),
             Device::Metal(_) => format!("metal_{}", name.into()),
         }
     }
@@ -59,8 +49,6 @@ impl BenchDeviceHandler {
         let mut devices = Vec::new();
         if cfg!(feature = "metal") {
             devices.push(Device::new_metal(0)?);
-        } else if cfg!(feature = "cuda") {
-            devices.push(Device::new_cuda(0)?);
         }
         devices.push(Device::Cpu);
         Ok(Self { devices })

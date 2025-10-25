@@ -229,11 +229,7 @@ fn main() -> anyhow::Result<()> {
     let start = std::time::Instant::now();
     let config: Config = serde_json::from_slice(&std::fs::read(config_filename)?)?;
     let device = candle_examples::device(args.cpu)?;
-    let dtype = if device.is_cuda() {
-        DType::BF16
-    } else {
-        DType::F32
-    };
+    let dtype = DType::F32;
     let vb = unsafe { VarBuilder::from_mmaped_safetensors(&filenames, dtype, &device)? };
     let model = Model::new(&config, vb)?;
 

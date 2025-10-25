@@ -2,20 +2,17 @@ use crate::backend::BackendDevice;
 use crate::cpu_backend::CpuDevice;
 use crate::{CpuStorage, DType, Result, Shape, Storage, WithDType};
 
-/// A `DeviceLocation` represents a physical device whereas multiple `Device`
-/// can live on the same location (typically for cuda devices).
+/// A `DeviceLocation` represents a physical device.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum DeviceLocation {
     Cpu,
-    Cuda { gpu_id: usize },
     Metal { gpu_id: usize },
 }
 
-/// Cpu, Cuda, or Metal
+/// Cpu or Metal
 #[derive(Debug, Clone)]
 pub enum Device {
     Cpu,
-    Cuda(crate::CudaDevice),
     Metal(crate::MetalDevice),
 }
 
@@ -231,30 +228,6 @@ impl<S: WithDType> NdArray for Vec<Vec<Vec<Vec<S>>>> {
 }
 
 impl Device {
-    pub fn new_cuda(ordinal: usize) -> Result<Self> {
-        Ok(Self::Cuda(crate::CudaDevice::new(ordinal)?))
-    }
-
-    pub fn as_cuda_device(&self) -> Result<&crate::CudaDevice> {
-        match self {
-            Self::Cuda(d) => Ok(d),
-            Self::Cpu => crate::bail!("expected a cuda device, got cpu"),
-            Self::Metal(_) => crate::bail!("expected a cuda device, got Metal"),
-        }
-    }
-
-    pub fn as_metal_device(&self) -> Result<&crate::MetalDevice> {
-        match self {
-            Self::Cuda(_) => crate::bail!("expected a metal device, got cuda"),
-            Self::Cpu => crate::bail!("expected a metal device, got cpu"),
-            Self::Metal(d) => Ok(d),
-        }
-    }
-
-    pub fn new_cuda_with_stream(ordinal: usize) -> Result<Self> {
-        Ok(Self::Cuda(crate::CudaDevice::new_with_stream(ordinal)?))
-    }
-
     pub fn new_metal(ordinal: usize) -> Result<Self> {
         Ok(Self::Metal(crate::MetalDevice::new(ordinal)?))
     }
@@ -262,7 +235,6 @@ impl Device {
     pub fn set_seed(&self, seed: u64) -> Result<()> {
         match self {
             Self::Cpu => CpuDevice.set_seed(seed),
-            Self::Cuda(c) => c.set_seed(seed),
             Self::Metal(m) => m.set_seed(seed),
         }
     }
@@ -270,7 +242,6 @@ impl Device {
     pub fn same_device(&self, rhs: &Self) -> bool {
         match (self, rhs) {
             (Self::Cpu, Self::Cpu) => true,
-            (Self::Cuda(lhs), Self::Cuda(rhs)) => lhs.same_device(rhs),
             (Self::Metal(lhs), Self::Metal(rhs)) => lhs.same_device(rhs),
             _ => false,
         }
@@ -279,7 +250,6 @@ impl Device {
     pub fn location(&self) -> DeviceLocation {
         match self {
             Self::Cpu => DeviceLocation::Cpu,
-            Self::Cuda(device) => device.location(),
             Device::Metal(device) => device.location(),
         }
     }
@@ -288,17 +258,13 @@ impl Device {
         matches!(self, Self::Cpu)
     }
 
-    pub fn is_cuda(&self) -> bool {
-        matches!(self, Self::Cuda(_))
-    }
-
     pub fn is_metal(&self) -> bool {
         matches!(self, Self::Metal(_))
     }
 
     pub fn supports_bf16(&self) -> bool {
         match self {
-            Self::Cuda(_) | Self::Metal(_) => true,
+            Self::Metal(_) => true,
             Self::Cpu => false,
         }
     }
@@ -309,14 +275,6 @@ impl Device {
             DType::BF16
         } else {
             DType::F32
-        }
-    }
-
-    pub fn cuda_if_available(ordinal: usize) -> Result<Self> {
-        if crate::utils::cuda_is_available() {
-            Self::new_cuda(ordinal)
-        } else {
-            Ok(Self::Cpu)
         }
     }
 
@@ -339,16 +297,6 @@ impl Device {
             Device::Cpu => {
                 let storage = CpuDevice.rand_uniform(shape, dtype, lo, up)?;
                 Ok(Storage::Cpu(storage))
-            }
-            Device::Cuda(device) => {
-                // TODO: Remove the special case if we start supporting generating f16/bf16 directly.
-                if dtype == DType::F16 || dtype == DType::BF16 {
-                    let storage = device.rand_uniform(shape, DType::F32, lo, up)?;
-                    Storage::Cuda(storage).to_dtype(&crate::Layout::contiguous(shape), dtype)
-                } else {
-                    let storage = device.rand_uniform(shape, dtype, lo, up)?;
-                    Ok(Storage::Cuda(storage))
-                }
             }
             Device::Metal(device) => {
                 let storage = device.rand_uniform(shape, dtype, lo, up)?;
@@ -378,16 +326,6 @@ impl Device {
                 let storage = CpuDevice.rand_normal(shape, dtype, mean, std)?;
                 Ok(Storage::Cpu(storage))
             }
-            Device::Cuda(device) => {
-                // TODO: Remove the special case if we start supporting generating f16/bf16 directly.
-                if dtype == DType::F16 || dtype == DType::BF16 {
-                    let storage = device.rand_normal(shape, DType::F32, mean, std)?;
-                    Storage::Cuda(storage).to_dtype(&crate::Layout::contiguous(shape), dtype)
-                } else {
-                    let storage = device.rand_normal(shape, dtype, mean, std)?;
-                    Ok(Storage::Cuda(storage))
-                }
-            }
             Device::Metal(device) => {
                 let storage = device.rand_normal(shape, dtype, mean, std)?;
                 Ok(Storage::Metal(storage))
@@ -410,10 +348,6 @@ impl Device {
                 let storage = CpuDevice.zeros_impl(shape, dtype)?;
                 Ok(Storage::Cpu(storage))
             }
-            Device::Cuda(device) => {
-                let storage = device.zeros_impl(shape, dtype)?;
-                Ok(Storage::Cuda(storage))
-            }
             Device::Metal(device) => {
                 let storage = device.zeros_impl(shape, dtype)?;
                 Ok(Storage::Metal(storage))
@@ -427,10 +361,6 @@ impl Device {
                 let storage = CpuDevice.alloc_uninit(shape, dtype)?;
                 Ok(Storage::Cpu(storage))
             }
-            Device::Cuda(device) => {
-                let storage = device.alloc_uninit(shape, dtype)?;
-                Ok(Storage::Cuda(storage))
-            }
             Device::Metal(device) => {
                 let storage = device.alloc_uninit(shape, dtype)?;
                 Ok(Storage::Metal(storage))
@@ -441,10 +371,6 @@ impl Device {
     pub(crate) fn storage_from_slice<D: WithDType>(&self, data: &[D]) -> Result<Storage> {
         match self {
             Device::Cpu => Ok(Storage::Cpu(data.to_cpu_storage())),
-            Device::Cuda(device) => {
-                let storage = device.storage_from_slice(data)?;
-                Ok(Storage::Cuda(storage))
-            }
             Device::Metal(device) => {
                 let storage = device.storage_from_slice(data)?;
                 Ok(Storage::Metal(storage))
@@ -455,11 +381,6 @@ impl Device {
     pub(crate) fn storage<A: NdArray>(&self, array: A) -> Result<Storage> {
         match self {
             Device::Cpu => Ok(Storage::Cpu(array.to_cpu_storage())),
-            Device::Cuda(device) => {
-                let storage = array.to_cpu_storage();
-                let storage = device.storage_from_cpu_storage_owned(storage)?;
-                Ok(Storage::Cuda(storage))
-            }
             Device::Metal(device) => {
                 let storage = array.to_cpu_storage();
                 let storage = device.storage_from_cpu_storage_owned(storage)?;
@@ -471,11 +392,6 @@ impl Device {
     pub(crate) fn storage_owned<S: WithDType>(&self, data: Vec<S>) -> Result<Storage> {
         match self {
             Device::Cpu => Ok(Storage::Cpu(S::to_cpu_storage_owned(data))),
-            Device::Cuda(device) => {
-                let storage = S::to_cpu_storage_owned(data);
-                let storage = device.storage_from_cpu_storage_owned(storage)?;
-                Ok(Storage::Cuda(storage))
-            }
             Device::Metal(device) => {
                 let storage = S::to_cpu_storage_owned(data);
                 let storage = device.storage_from_cpu_storage_owned(storage)?;
@@ -487,7 +403,6 @@ impl Device {
     pub fn synchronize(&self) -> Result<()> {
         match self {
             Self::Cpu => Ok(()),
-            Self::Cuda(d) => d.synchronize(),
             Self::Metal(d) => d.synchronize(),
         }
     }

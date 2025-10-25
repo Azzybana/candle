@@ -19,7 +19,7 @@ flags to use local files instead, run with `--help` to learn about them.
 ## Running some example.
 
 ```bash
-cargo run --example stable-diffusion --release --features=cuda,cudnn \
+cargo run --example stable-diffusion --release \
     -- --prompt "a cosmonaut on a horse (hd, realistic, high-def)"
 ```
 
@@ -28,7 +28,7 @@ faster than previous versions, to give it a try add a `--sd-version turbo` flag,
 e.g.:
 
 ```bash
-cargo run --example stable-diffusion --release --features=cuda,cudnn \
+cargo run --example stable-diffusion --release \
     -- --prompt "a cosmonaut on a horse (hd, realistic, high-def)" --sd-version turbo
 ```
 

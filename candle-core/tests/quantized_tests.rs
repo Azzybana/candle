@@ -1,11 +1,10 @@
 use candle_core::{
-    bail,
+    DType, Device, IndexOp, Module, Result, Tensor, bail,
     quantized::{self, GgmlDType},
     test_device,
     test_utils::to_vec2_round,
-    DType, Device, IndexOp, Module, Result, Tensor,
 };
-use quantized::{k_quants, GgmlType};
+use quantized::{GgmlType, k_quants};
 use rand::prelude::*;
 
 const GGML_TEST_SIZE: usize = 32 * 128;
@@ -20,9 +19,7 @@ fn test_matmul(
     (b, m, n, k): (usize, usize, usize, usize),
     dtype: GgmlDType,
 ) -> Result<()> {
-    if (device.is_cuda() || device.is_metal())
-        && (dtype == GgmlDType::Q8_1 || dtype == GgmlDType::Q8K)
-    {
+    if device.is_metal() && (dtype == GgmlDType::Q8_1 || dtype == GgmlDType::Q8K) {
         return Ok(());
     }
 
@@ -127,14 +124,6 @@ fn quantized_matmul(device: &Device) -> Result<()> {
                 [341970.0, 994574.0, 1656181.0, 2302182.0]
             ]
         ),
-        Device::Cuda(_) => assert_eq!(
-            to_vec2_round(&res, 0)?,
-            &[
-                [84866.0, 214045.0, 344676.0, 473707.0],
-                [213425.0, 604313.0, 1000431.0, 1387960.0],
-                [342030.0, 994630.0, 1656248.0, 2302250.0]
-            ]
-        ),
         Device::Cpu => assert_eq!(
             to_vec2_round(&res, 0)?,
             &[
@@ -191,14 +180,6 @@ fn quantized_matmul_neg(device: &Device) -> Result<()> {
                 [-196101.0, 63021.0, 324252.0, 587137.0]
             ]
         ),
-        Device::Cuda(_) => assert_eq!(
-            to_vec2_round(&res, 0)?,
-            &[
-                [243740.0, -19762.0, -285476.0, -550498.0],
-                [23774.0, 21645.0, 19395.0, 18364.0],
-                [-196045.0, 63030.0, 324120.0, 587079.0]
-            ]
-        ),
         Device::Cpu => assert_eq!(
             to_vec2_round(&res, 0)?,
             &[
@@ -212,11 +193,7 @@ fn quantized_matmul_neg(device: &Device) -> Result<()> {
     let res2 = matmul.forward(&lhs2)?;
     let res2 = res2.i(1)?;
     let diff = (&res - res2)?.abs()?.mean_all()?.to_vec0::<f32>()? / res.elem_count() as f32;
-    if device.is_cuda() {
-        assert!(diff < 0.1);
-    } else {
-        assert!(diff < 0.96);
-    }
+    assert!(diff < 0.96);
     Ok(())
 }
 
@@ -242,13 +219,7 @@ fn qmm_batch(dev: &Device) -> Result<()> {
     let mm4 = rhs.forward(&lhs4)?;
     assert_eq!(mm4.shape().dims(), [12, 6]);
     let diff4 = (mm4.i(..6)? - &mm3)?.abs()?.sum_all()?.to_vec0::<f32>()?;
-    if dev.is_cuda() {
-        // We use a different kernel for sizes from 1 to 8 on cuda which explains
-        // the difference here.
-        assert!(0. < diff4 && diff4 < 1e-4)
-    } else {
-        assert_eq!(diff4, 0.0)
-    };
+    assert_eq!(diff4, 0.0);
     let diff4 = (mm4.i(6..)? - &mm4.i(..6)?)?
         .abs()?
         .sum_all()?
@@ -893,7 +864,10 @@ fn ggml_matmul_error_test_<T: GgmlType>(a: &[f32], b: &[f32], err_m: f32) -> Res
         let error = (result - reference_result).abs() / length as f32;
         let ggml_error = ggml_reference_matmul_error(T::DTYPE)? * err_m;
         if !error.is_finite() || error > GGML_MAX_DOT_PRODUCT_ERROR {
-            bail!("Dot product with dtype {:?} error {error} exceeds max error {GGML_MAX_DOT_PRODUCT_ERROR}. Source: {source}", T::DTYPE);
+            bail!(
+                "Dot product with dtype {:?} error {error} exceeds max error {GGML_MAX_DOT_PRODUCT_ERROR}. Source: {source}",
+                T::DTYPE
+            );
         }
         // We diverge slightly due to different rounding behavior / f16 to f32 conversions in GGML
         // => we use a slightly higher error threshold

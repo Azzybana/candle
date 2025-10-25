@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Error, Result};
 use byteorder::{LittleEndian, ReadBytesExt};
-use candle::{utils, DType, Device, Tensor};
+use candle::{DType, Device, Tensor, utils};
 use candle_nn::VarBuilder;
 use candle_transformers::models::voxtral;
 use candle_transformers::models::voxtral::{
@@ -38,11 +38,7 @@ impl VoxtralModel {
     /// Returns an error if the model cannot be loaded.
     pub fn new(model_id: &str, use_cpu: bool) -> Result<Self> {
         // Determine device
-        let device = if !use_cpu && utils::cuda_is_available() {
-            Device::new_cuda(0).context("Failed to create CUDA device")?
-        } else {
-            Device::Cpu
-        };
+        let device = Device::Cpu;
 
         let (model_files, tokenizer_file) = download::model_files(model_id)?;
 
@@ -226,17 +222,13 @@ fn load_model_weights<'a>(model_files: &'a [PathBuf], device: &Device) -> Result
     let dtype = DType::F16; // F16 for memory efficiency
 
     // MEMORY OPTIMIZATION: Force garbage collection before loading
-    if let candle::Device::Cuda(_) = device {
-        device.synchronize()?;
-    }
+    // CUDA synchronization removed
 
     // Use memory-mapped loading for efficiency (confirmed better than regular loading)
     let vb = unsafe { VarBuilder::from_mmaped_safetensors(model_files, dtype, device)? };
 
     // MEMORY OPTIMIZATION: Force garbage collection after loading
-    if let candle::Device::Cuda(_) = device {
-        device.synchronize()?;
-    }
+    // CUDA synchronization removed
 
     Ok(vb)
 }

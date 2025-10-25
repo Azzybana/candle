@@ -40,7 +40,9 @@ fn custom_op1_no_backward() -> Result<()> {
     let elu_t = t.apply_op1_no_bwd(&Elu { alpha: 1. })?;
     assert_eq!(
         to_vec1_round(&elu_t, 4)?,
-        &[-0.9933, -0.9817, -0.9502, -0.8647, -0.6321, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+        &[
+            -0.9933, -0.9817, -0.9502, -0.8647, -0.6321, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0
+        ]
     );
     Ok(())
 }
@@ -140,12 +142,14 @@ fn inplace_op1() -> Result<()> {
     t.inplace_op1(&Elu { alpha: 1. })?;
     assert_eq!(
         to_vec1_round(&t, 4)?,
-        &[-0.9933, -0.9817, -0.9502, -0.8647, -0.6321, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+        &[
+            -0.9933, -0.9817, -0.9502, -0.8647, -0.6321, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0
+        ]
     );
     Ok(())
 }
 
-#[cfg(any(feature = "cuda", feature = "metal"))]
+#[cfg(feature = "metal")]
 #[allow(clippy::approx_constant)]
 #[test]
 fn ug_op() -> Result<()> {
@@ -161,13 +165,7 @@ fn ug_op() -> Result<()> {
         let opts: ug::lower_op::Opts = Default::default();
         kernel.lower(&opts)?
     };
-    let device = if candle_core::utils::cuda_is_available() {
-        Device::new_cuda(0)?
-    } else if candle_core::utils::metal_is_available() {
-        Device::new_metal(0)?
-    } else {
-        candle_core::bail!("metal/cuda is mandatory for this test")
-    };
+    let device = Device::new_metal(0)?;
     let op = candle_core::UgIOp1::new("test", kernel, &device)?;
     let t = Tensor::arange(0u32, 12u32, &device)?.to_dtype(DType::F32)?;
     t.inplace_op1(&op)?;

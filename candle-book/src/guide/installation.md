@@ -15,29 +15,6 @@ cd myapp
 cargo add --git https://github.com/huggingface/candle.git candle-core
 ```
 
-### CUDA
-
-First, make sure that Cuda is correctly installed.
-- `nvcc --version` should print information about your Cuda compiler driver.
-- `nvidia-smi --query-gpu=compute_cap --format=csv` should print your GPUs compute capability, e.g. something
-like:
-
-```bash
-compute_cap
-8.9
-```
-
-You can also compile the Cuda kernels for a specific compute cap using the 
-`CUDA_COMPUTE_CAP=<compute cap>` environment variable.
-
-If any of the above commands errors out, please make sure to update your Cuda version.
-
-Add the `candle-core` crate with the cuda feature:
-
-```bash
-cargo add --git https://github.com/huggingface/candle.git candle-core --features "cuda"
-```
-
 ### MKL
 
 You can also see the `mkl` feature which can get faster inference on CPU.

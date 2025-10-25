@@ -1,18 +1,9 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
-use anyhow::{Error as E, Result};
-use clap::Parser;
-
-use candle_transformers::models::starcoder2::Model;
-
 use candle::{DType, Device, Tensor};
 use candle_examples::token_output_stream::TokenOutputStream;
 use candle_nn::VarBuilder;
 use candle_transformers::generation::LogitsProcessor;
+use candle_transformers::models::starcoder2::Model;
+use clap::Parser;
 use hf_hub::{api::sync::Api, Repo, RepoType};
 use tokenizers::Tokenizer;
 
@@ -48,14 +39,14 @@ impl TextGeneration {
         }
     }
 
-    fn run(&mut self, prompt: &str, sample_len: usize) -> Result<()> {
+    fn run(&mut self, prompt: &str, sample_len: usize) -> anyhow::Result<()> {
         use std::io::Write;
         self.tokenizer.clear();
         let mut tokens = self
             .tokenizer
             .tokenizer()
             .encode(prompt, true)
-            .map_err(E::msg)?
+            .map_err(anyhow::Error::msg)?
             .get_ids()
             .to_vec();
         for &t in tokens.iter() {
@@ -101,7 +92,7 @@ impl TextGeneration {
             }
         }
         let dt = start_gen.elapsed();
-        if let Some(rest) = self.tokenizer.decode_rest().map_err(E::msg)? {
+        if let Some(rest) = self.tokenizer.decode_rest().map_err(anyhow::Error::msg)? {
             print!("{rest}");
         }
         std::io::stdout().flush()?;
@@ -170,7 +161,7 @@ struct Args {
     repeat_last_n: usize,
 }
 
-fn main() -> Result<()> {
+fn main() -> anyhow::Result<()> {
     use tracing_chrome::ChromeLayerBuilder;
     use tracing_subscriber::prelude::*;
 
@@ -223,16 +214,12 @@ fn main() -> Result<()> {
         None => vec![repo.get("model.safetensors")?],
     };
     println!("retrieved the files in {:?}", start.elapsed());
-    let tokenizer = Tokenizer::from_file(tokenizer_file).map_err(E::msg)?;
+    let tokenizer = Tokenizer::from_file(tokenizer_file).map_err(anyhow::Error::msg)?;
 
     let start = std::time::Instant::now();
     let config = serde_json::from_reader(std::fs::File::open(config_file)?)?;
     let device = candle_examples::device(args.cpu)?;
-    let dtype = if device.is_cuda() {
-        DType::BF16
-    } else {
-        DType::F32
-    };
+    let dtype = DType::F32;
     let vb = unsafe { VarBuilder::from_mmaped_safetensors(&filenames, dtype, &device)? };
     let model = Model::new(&config, vb)?;
 

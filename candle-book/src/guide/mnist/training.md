@@ -65,7 +65,7 @@ use candle_nn::{loss, ops, Linear, Module, Optimizer, VarBuilder, VarMap};
 fn training_loop(
     m: candle_datasets::vision::Dataset,
 ) -> anyhow::Result<()> {
-    let dev = Device::cuda_if_available(0)?;
+    let dev = Device::Cpu;
 
     let train_labels = m.train_labels;
     let train_images = m.train_images.to_device(&dev)?;

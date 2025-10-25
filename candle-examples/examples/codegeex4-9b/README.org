@@ -5,10 +5,10 @@ THUDM/CodeGeeX4 is a versatile model for all AI software development scenarios, 
 - [[https://codegeex.cn/][HomePage]]
 - [[https://huggingface.co/THUDM/codegeex4-all-9b][huggingface]]  
 
-** Running with ~cuda~
+** Running
 
 #+begin_src shell
-  cargo run --example codegeex4-9b --release --features cuda   -- --prompt "please write a insertion sort in rust" --sample-len 300
+  cargo run --example codegeex4-9b --release -- --prompt "please write a insertion sort in rust" --sample-len 300
 #+end_src
 
 ** Running with ~cpu~
@@ -19,7 +19,7 @@ THUDM/CodeGeeX4 is a versatile model for all AI software development scenarios, 
 ** Output_Example
 *** Input
 #+begin_src shell
-  cargo run  --release --features cuda -- --prompt 'please write a FFT in rust' --sample-len 500 --cache /root/autodl-tmp 
+  cargo run  --release -- --prompt 'please write a FFT in rust' --sample-len 500 --cache /root/autodl-tmp 
 #+end_src
 
 *** Output
@@ -49,7 +49,7 @@ THUDM/CodeGeeX4 is a versatile model for all AI software development scenarios, 
       let n = input.len();
     
       if n == 1 {
-	  return vec![input[0]]];
+	  return vec![input[0]];
       }
     
       let mut even = vec![];

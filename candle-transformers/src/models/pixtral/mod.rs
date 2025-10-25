@@ -16,7 +16,6 @@
 //!
 //! ```bash
 //! cargo run --profile=release-with-debug \
-//!    --features cuda \
 //!    --example pixtral -- \
 //!    --image candle-examples/examples/flux/assets/flux-robot.jpg
 //! ```

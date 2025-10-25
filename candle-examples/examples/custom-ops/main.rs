@@ -6,12 +6,6 @@
 #[cfg(feature = "mkl")]
 extern crate intel_mkl_src;
 
-#[rustfmt::skip]
-#[cfg(feature = "cuda")]
-mod cuda_kernels {
-    include!(concat!(env!("OUT_DIR"), "/cuda_kernels.rs"));
-}
-
 use clap::Parser;
 
 use candle::{CpuStorage, CustomOp1, Layout, Result, Shape, Tensor};
@@ -49,43 +43,6 @@ impl CustomOp1 for LayerNorm {
         }
         let storage = candle::WithDType::to_cpu_storage_owned(dst);
         Ok((storage, layout.shape().clone()))
-    }
-
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(
-        &self,
-        storage: &candle::CudaStorage,
-        layout: &Layout,
-    ) -> Result<(candle::CudaStorage, Shape)> {
-        use candle::backend::BackendStorage;
-        use candle::cuda_backend::cudarc::driver::{LaunchConfig, PushKernelArg};
-        use candle::cuda_backend::WrapErr;
-        let (d1, d2) = layout.shape().dims2()?;
-        let d1 = d1 as u32;
-        let d2 = d2 as u32;
-        let dev = storage.device().clone();
-        let slice = storage.as_cuda_slice::<f32>()?;
-        let slice = match layout.contiguous_offsets() {
-            None => candle::bail!("input has to be contiguous"),
-            Some((o1, o2)) => slice.slice(o1..o2),
-        };
-        let elem_count = layout.shape().elem_count();
-        let dst = unsafe { dev.alloc::<f32>(elem_count) }?;
-        let func =
-            dev.get_or_load_custom_func("rms_f32", "mymodule", cuda_kernels::LAYERNORM_KERNELS)?;
-        let cfg = LaunchConfig {
-            grid_dim: (d1, 1, 1),
-            block_dim: (d2, 1, 1),
-            shared_mem_bytes: 0,
-        };
-        let mut builder = func.builder();
-        builder.arg(&dst);
-        builder.arg(&slice);
-        candle::builder_arg!(builder, self.eps, d1, d2);
-        unsafe { builder.launch(cfg) }.w()?;
-
-        let dst = candle::CudaStorage::wrap_cuda_slice(dst, dev);
-        Ok((dst, layout.shape().clone()))
     }
 }
 

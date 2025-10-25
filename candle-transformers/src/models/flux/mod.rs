@@ -9,7 +9,7 @@
 //! # Usage
 //!
 //! ```bash
-//! cargo run --features cuda \
+//! cargo run \
 //!     --example flux -r -- \
 //!     --height 1024 --width 1024 \
 //!     --prompt "a rusty robot walking on a beach holding a small torch, \

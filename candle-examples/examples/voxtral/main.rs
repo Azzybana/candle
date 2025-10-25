@@ -23,12 +23,6 @@ struct Args {
     model_id: Option<String>,
 }
 
-#[cfg(feature = "cuda")]
-fn use_cpu() -> bool {
-    true
-}
-
-#[cfg(not(feature = "cuda"))]
 fn use_cpu() -> bool {
     false
 }
@@ -56,7 +50,9 @@ fn main() -> Result<()> {
             std::path::PathBuf::from(input)
         }
     } else {
-        println!("No audio file submitted: Downloading https://huggingface.co/datasets/Narsil/candle_demo/blob/main/samples_jfk.wav");
+        println!(
+            "No audio file submitted: Downloading https://huggingface.co/datasets/Narsil/candle_demo/blob/main/samples_jfk.wav"
+        );
         dataset.get("samples_jfk.wav")?
     };
 

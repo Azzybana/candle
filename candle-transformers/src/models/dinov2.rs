@@ -4,11 +4,11 @@
 //! DINOv2 is a self-supervised learning model that can learn visual features
 //! without using any labeled data. See: ["DINOv2: Learning Robust Visual Features without Supervision"](https://github.com/facebookresearch/dinov2)
 //!
-//! ## Running an example with color map and CUDA
+//! ## Running an example with color map
 //!
 //! ```bash
 //! cargo run \
-//!   --features cuda,depth_anything_v2 \
+//!   --features depth_anything_v2 \
 //!   --package candle-examples \
 //!   --example depth_anything_v2 \
 //!   -- --color-map \
@@ -37,8 +37,8 @@
 //! ```
 //!
 
-use candle::{IndexOp, Result, Tensor, D};
-use candle_nn::{layer_norm, LayerNorm, Linear, Module, VarBuilder};
+use candle::{D, IndexOp, Result, Tensor};
+use candle_nn::{LayerNorm, Linear, Module, VarBuilder, layer_norm};
 
 const IMG_SIZE: usize = 518;
 const PATCH_SIZE: usize = 14;

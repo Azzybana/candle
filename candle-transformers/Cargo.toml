@@ -18,7 +18,6 @@ crate-type = ["rlib"]
 accelerate-src = { workspace = true, optional = true }
 byteorder = { workspace = true }
 candle = { workspace = true }
-candle-flash-attn = { workspace = true, optional = true }
 candle-nn = { workspace = true }
 fancy-regex = { workspace = true }
 intel-mkl-src = { workspace = true, optional = true }
@@ -37,12 +36,6 @@ accelerate = [
     "candle/accelerate",
     "candle-nn/accelerate",
 ] # Use Accelerate framework on macOS
-cuda = ["candle/cuda", "candle-nn/cuda"] # Enable CUDA acceleration
-cudnn = ["candle/cudnn", "candle-nn/cudnn"] # Enable cuDNN with CUDA
-flash-attn = [
-    "cuda",
-    "dep:candle-flash-attn",
-] # Enable flash attention with CUDA
 mkl = [
     "dep:intel-mkl-src",
     "candle/mkl",

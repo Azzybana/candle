@@ -1,7 +1,7 @@
 //! Tensor ops.
 //!
 
-use candle::{CpuStorage, DType, Layout, Module, Result, Shape, Tensor, D};
+use candle::{CpuStorage, D, DType, Layout, Module, Result, Shape, Tensor};
 use rayon::prelude::*;
 
 /// Applies the softmax function to the input tensor, rescaling the element so that elements on
@@ -82,66 +82,14 @@ impl candle::CustomOp1 for Sigmoid {
         Ok((storage, layout.shape().clone()))
     }
 
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(
-        &self,
-        storage: &candle::CudaStorage,
-        layout: &Layout,
-    ) -> Result<(candle::CudaStorage, Shape)> {
-        use candle::backend::BackendStorage;
-        use candle::cuda_backend::cudarc::driver::{
-            CudaSlice, DeviceRepr, LaunchConfig, PushKernelArg, ValidAsZeroBits,
-        };
-        use candle::cuda_backend::SlicePtrOrNull;
-        use candle::cuda_backend::{kernel_name, kernels, Map1, WrapErr};
-        use candle::{CudaDevice, WithDType};
-
-        struct S;
-        impl Map1 for S {
-            fn f<T: DeviceRepr + WithDType + ValidAsZeroBits>(
-                &self,
-                src: &CudaSlice<T>,
-                dev: &CudaDevice,
-                layout: &Layout,
-            ) -> Result<CudaSlice<T>> {
-                let shape = layout.shape();
-                let dims = shape.dims();
-                let el_count = shape.elem_count();
-                let cfg = LaunchConfig::for_num_elems(el_count as u32);
-                let ds = SlicePtrOrNull::params_from_layout(dev, layout)?;
-                let src = &src.slice(layout.start_offset()..);
-                let func = dev.get_or_load_func(&kernel_name::<T>("usigmoid"), &kernels::UNARY)?;
-                // SAFETY: Set later by running the kernel.
-                let out = unsafe { dev.alloc::<T>(el_count)? };
-
-                let mut builder = func.builder();
-                candle::builder_arg!(builder, el_count, dims.len());
-                ds.builder_arg(&mut builder);
-                builder.arg(src);
-                builder.arg(&out);
-                // SAFETY: ffi.
-                unsafe { builder.launch(cfg) }.w()?;
-                Ok(out)
-            }
-        }
-
-        let dev = storage.device();
-        let slice = S.map(&storage.slice, dev, layout)?;
-        let dst = candle::CudaStorage {
-            slice,
-            device: dev.clone(),
-        };
-        Ok((dst, layout.shape().clone()))
-    }
-
     #[cfg(feature = "metal")]
     fn metal_fwd(
         &self,
         storage: &candle::MetalStorage,
         layout: &Layout,
     ) -> Result<(candle::MetalStorage, Shape)> {
-        use candle::backend::BackendStorage;
         use candle::MetalError;
+        use candle::backend::BackendStorage;
         let device = storage.device();
         let dtype = storage.dtype();
         let shape = layout.shape();
@@ -350,63 +298,6 @@ impl candle::CustomOp1 for SoftmaxLastDim {
         }
     }
 
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(
-        &self,
-        storage: &candle::CudaStorage,
-        layout: &Layout,
-    ) -> Result<(candle::CudaStorage, Shape)> {
-        use candle::cuda_backend::cudarc::driver::{
-            CudaSlice, DeviceRepr, LaunchConfig, PushKernelArg,
-        };
-        use candle::cuda_backend::{kernel_name, kernels, Map1, WrapErr};
-        use candle::{CudaDevice, WithDType};
-
-        struct S;
-        impl Map1 for S {
-            fn f<T: DeviceRepr + WithDType>(
-                &self,
-                src: &CudaSlice<T>,
-                dev: &CudaDevice,
-                layout: &Layout,
-            ) -> Result<CudaSlice<T>> {
-                let src = match layout.contiguous_offsets() {
-                    None => candle::bail!("input has to be contiguous"),
-                    Some((o1, o2)) => src.slice(o1..o2),
-                };
-                let el = layout.shape().elem_count();
-                let dims = layout.shape().dims();
-                let dim_m1 = dims[dims.len() - 1];
-                let (n_rows, n_cols) = (el / dim_m1, dim_m1);
-
-                let cfg = LaunchConfig {
-                    grid_dim: (n_rows as u32, 1, 1),
-                    block_dim: (1, 32, 1),
-                    shared_mem_bytes: 0,
-                };
-                let func = dev.get_or_load_func(&kernel_name::<T>("softmax"), &kernels::REDUCE)?;
-                // SAFETY: Set later by running the kernel.
-                let dst = unsafe { dev.alloc::<T>(el)? };
-                let mut builder = func.builder();
-                builder.arg(&src);
-                builder.arg(&dst);
-                candle::builder_arg!(builder, n_cols as i32);
-                // SAFETY: ffi.
-                unsafe { builder.launch(cfg) }.w()?;
-                Ok(dst)
-            }
-        }
-
-        use candle::backend::BackendStorage;
-        let dev = storage.device();
-        let slice = S.map(&storage.slice, dev, layout)?;
-        let dst = candle::cuda_backend::CudaStorage {
-            slice,
-            device: dev.clone(),
-        };
-        Ok((dst, layout.shape().clone()))
-    }
-
     #[cfg(feature = "metal")]
     fn metal_fwd(
         &self,
@@ -525,75 +416,6 @@ impl candle::CustomOp2 for RmsNorm {
             (C::F32(s1), C::F32(s2)) => inner::<f32>(s1, l1, s2, l2, eps),
             _ => candle::bail!("unsupported dtype for rmsnorm {:?}", s1.dtype()),
         }
-    }
-
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(
-        &self,
-        s1: &candle::CudaStorage,
-        l1: &Layout,
-        s2: &candle::CudaStorage,
-        l2: &Layout,
-    ) -> Result<(candle::CudaStorage, Shape)> {
-        use candle::cuda_backend::cudarc::driver::{
-            CudaSlice, DeviceRepr, LaunchConfig, PushKernelArg,
-        };
-        use candle::cuda_backend::{kernel_name, kernels, Map2, WrapErr};
-        use candle::{CudaDevice, WithDType};
-
-        struct S {
-            eps: f32,
-        }
-        impl Map2 for S {
-            fn f<T: DeviceRepr + WithDType>(
-                &self,
-                src: &CudaSlice<T>,
-                layout: &Layout,
-                alpha: &CudaSlice<T>,
-                alpha_layout: &Layout,
-                dev: &CudaDevice,
-            ) -> Result<CudaSlice<T>> {
-                let src = match layout.contiguous_offsets() {
-                    None => candle::bail!("input has to be contiguous"),
-                    Some((o1, o2)) => src.slice(o1..o2),
-                };
-                let alpha = match alpha_layout.contiguous_offsets() {
-                    None => candle::bail!("alpha has to be contiguous"),
-                    Some((o1, o2)) => alpha.slice(o1..o2),
-                };
-                let el = layout.shape().elem_count();
-                let dims = layout.shape().dims();
-                let dim_m1 = dims[dims.len() - 1];
-                let (n_rows, n_cols) = (el / dim_m1, dim_m1);
-
-                let block_size = if n_cols < 1024 { 32 } else { 1024 };
-                let cfg = LaunchConfig {
-                    grid_dim: (n_rows as u32, 1, 1),
-                    block_dim: (block_size, 1, 1),
-                    shared_mem_bytes: 0,
-                };
-                let func = dev.get_or_load_func(&kernel_name::<T>("rmsnorm"), &kernels::REDUCE)?;
-                // SAFETY: Set later by running the kernel.
-                let dst = unsafe { dev.alloc::<T>(el)? };
-                let mut builder = func.builder();
-                builder.arg(&src);
-                builder.arg(&dst);
-                builder.arg(&alpha);
-                candle::builder_arg!(builder, n_cols as i32, block_size as i32, self.eps);
-                // SAFETY: ffi.
-                unsafe { builder.launch(cfg) }.w()?;
-                Ok(dst)
-            }
-        }
-
-        use candle::backend::BackendStorage;
-        let dev = s1.device();
-        let slice = S { eps: self.eps }.map(&s1.slice, l1, &s2.slice, l2, dev)?;
-        let dst = candle::cuda_backend::CudaStorage {
-            slice,
-            device: dev.clone(),
-        };
-        Ok((dst, l1.shape().clone()))
     }
 
     #[cfg(feature = "metal")]
@@ -755,85 +577,6 @@ impl candle::CustomOp3 for LayerNorm {
             (C::F32(s1), C::F32(s2), C::F32(s3)) => inner::<f32>(s1, l1, s2, l2, s3, l3, eps),
             _ => candle::bail!("unsupported dtype for rmsnorm {:?}", s1.dtype()),
         }
-    }
-
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(
-        &self,
-        s1: &candle::CudaStorage,
-        l1: &Layout,
-        s2: &candle::CudaStorage,
-        l2: &Layout,
-        s3: &candle::CudaStorage,
-        l3: &Layout,
-    ) -> Result<(candle::CudaStorage, Shape)> {
-        use candle::cuda_backend::cudarc::driver::{
-            CudaSlice, DeviceRepr, LaunchConfig, PushKernelArg,
-        };
-        use candle::cuda_backend::{kernel_name, kernels, Map3, WrapErr};
-        use candle::{CudaDevice, WithDType};
-
-        struct S {
-            eps: f32,
-        }
-        impl Map3 for S {
-            fn f<T: DeviceRepr + WithDType>(
-                &self,
-                src: &CudaSlice<T>,
-                layout: &Layout,
-                alpha: &CudaSlice<T>,
-                alpha_layout: &Layout,
-                beta: &CudaSlice<T>,
-                beta_layout: &Layout,
-                dev: &CudaDevice,
-            ) -> Result<CudaSlice<T>> {
-                let src = match layout.contiguous_offsets() {
-                    None => candle::bail!("input has to be contiguous"),
-                    Some((o1, o2)) => src.slice(o1..o2),
-                };
-                let alpha = match alpha_layout.contiguous_offsets() {
-                    None => candle::bail!("alpha has to be contiguous"),
-                    Some((o1, o2)) => alpha.slice(o1..o2),
-                };
-                let beta = match beta_layout.contiguous_offsets() {
-                    None => candle::bail!("beta has to be contiguous"),
-                    Some((o1, o2)) => beta.slice(o1..o2),
-                };
-                let el = layout.shape().elem_count();
-                let dims = layout.shape().dims();
-                let dim_m1 = dims[dims.len() - 1];
-                let (n_rows, n_cols) = (el / dim_m1, dim_m1);
-
-                let block_size = if n_cols < 1024 { 32 } else { 1024 };
-                let cfg = LaunchConfig {
-                    grid_dim: (n_rows as u32, 1, 1),
-                    block_dim: (block_size, 1, 1),
-                    shared_mem_bytes: 0,
-                };
-                let func =
-                    dev.get_or_load_func(&kernel_name::<T>("layernorm"), &kernels::REDUCE)?;
-                // SAFETY: Set later by running the kernel.
-                let dst = unsafe { dev.alloc::<T>(el)? };
-                let mut builder = func.builder();
-                builder.arg(&src);
-                builder.arg(&dst);
-                builder.arg(&alpha);
-                builder.arg(&beta);
-                candle::builder_arg!(builder, n_cols as i32, block_size as i32, self.eps);
-                // SAFETY: ffi.
-                unsafe { builder.launch(cfg) }.w()?;
-                Ok(dst)
-            }
-        }
-
-        use candle::backend::BackendStorage;
-        let dev = s1.device();
-        let slice = S { eps: self.eps }.map(&s1.slice, l1, &s2.slice, l2, &s3.slice, l3, dev)?;
-        let dst = candle::cuda_backend::CudaStorage {
-            slice,
-            device: dev.clone(),
-        };
-        Ok((dst, l1.shape().clone()))
     }
 
     #[cfg(feature = "metal")]

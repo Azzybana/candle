@@ -17,7 +17,7 @@ extern crate intel_mkl_src;
 #[cfg(feature = "accelerate")]
 extern crate accelerate_src;
 
-use ::candle::{quantized::QTensor, DType, Device, Module, Tensor, WithDType};
+use candle::{quantized::QTensor, DType, Device, Module, Tensor, WithDType};
 
 mod utils;
 use utils::wrap_err;
@@ -70,13 +70,11 @@ impl PyDType {
     }
 }
 
-static CUDA_DEVICE: std::sync::Mutex<Option<Device>> = std::sync::Mutex::new(None);
 static METAL_DEVICE: std::sync::Mutex<Option<Device>> = std::sync::Mutex::new(None);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum PyDevice {
     Cpu,
-    Cuda,
     Metal,
 }
 
@@ -84,7 +82,6 @@ impl PyDevice {
     fn from_device(device: &Device) -> Self {
         match device {
             Device::Cpu => Self::Cpu,
-            Device::Cuda(_) => Self::Cuda,
             Device::Metal(_) => Self::Metal,
         }
     }
@@ -92,15 +89,6 @@ impl PyDevice {
     fn as_device(&self) -> PyResult<Device> {
         match self {
             Self::Cpu => Ok(Device::Cpu),
-            Self::Cuda => {
-                let mut device = CUDA_DEVICE.lock().unwrap();
-                if let Some(device) = device.as_ref() {
-                    return Ok(device.clone());
-                };
-                let d = Device::new_cuda(0).map_err(wrap_err)?;
-                *device = Some(d.clone());
-                Ok(d)
-            }
             Self::Metal => {
                 let mut device = METAL_DEVICE.lock().unwrap();
                 if let Some(device) = device.as_ref() {
@@ -119,7 +107,6 @@ impl<'source> FromPyObject<'source> for PyDevice {
         let device: String = ob.extract()?;
         let device = match device.as_str() {
             "cpu" => PyDevice::Cpu,
-            "cuda" => PyDevice::Cuda,
             _ => Err(PyTypeError::new_err(format!("invalid device '{device}'")))?,
         };
         Ok(device)
@@ -130,7 +117,6 @@ impl ToPyObject for PyDevice {
     fn to_object(&self, py: Python<'_>) -> PyObject {
         let str = match self {
             PyDevice::Cpu => "cpu",
-            PyDevice::Cuda => "cuda",
             PyDevice::Metal => "metal",
         };
         str.to_object(py)
@@ -1077,7 +1063,7 @@ impl PyTensor {
     /// Quantize the tensor.
     /// &RETURNS&: QTensor
     fn quantize(&self, quantized_dtype: &str) -> PyResult<PyQTensor> {
-        use ::candle::quantized;
+        use candle::quantized;
         let res = match quantized_dtype.to_lowercase().as_str() {
             "q2k" => quantized::QTensor::quantize(self, quantized::GgmlDType::Q2K),
             "q3k" => quantized::QTensor::quantize(self, quantized::GgmlDType::Q3K),
@@ -1334,7 +1320,7 @@ fn load_gguf(
     py: Python<'_>,
 ) -> PyResult<(PyObject, PyObject)> {
     let device = device.unwrap_or(PyDevice::Cpu).as_device()?;
-    use ::candle::quantized::gguf_file;
+    use candle::quantized::gguf_file;
     fn gguf_value_to_pyobject(v: &gguf_file::Value, py: Python<'_>) -> PyResult<PyObject> {
         let v: PyObject = match v {
             gguf_file::Value::U8(x) => x.into_py(py),
@@ -1387,7 +1373,7 @@ fn load_gguf(
 )]
 /// Save quantized tensors and metadata to a GGUF file.
 fn save_gguf(path: &str, tensors: PyObject, metadata: PyObject, py: Python<'_>) -> PyResult<()> {
-    use ::candle::quantized::gguf_file;
+    use candle::quantized::gguf_file;
 
     fn pyobject_to_gguf_value(v: &Bound<PyAny>, py: Python<'_>) -> PyResult<gguf_file::Value> {
         let v: gguf_file::Value = if let Ok(x) = v.extract::<u8>() {
@@ -1469,13 +1455,6 @@ fn save_gguf(path: &str, tensors: PyObject, metadata: PyObject, py: Python<'_>) 
 }
 
 #[pyfunction]
-/// Returns true if the 'cuda' backend is available.
-/// &RETURNS&: bool
-fn cuda_is_available() -> bool {
-    ::candle::utils::cuda_is_available()
-}
-
-#[pyfunction]
 /// Returns true if candle was compiled with 'accelerate' support.
 /// &RETURNS&: bool
 fn has_accelerate() -> bool {
@@ -1497,7 +1476,6 @@ fn get_num_threads() -> usize {
 }
 
 fn candle_utils(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(cuda_is_available, m)?)?;
     m.add_function(wrap_pyfunction!(get_num_threads, m)?)?;
     m.add_function(wrap_pyfunction!(has_accelerate, m)?)?;
     m.add_function(wrap_pyfunction!(has_mkl, m)?)?;

@@ -4,7 +4,7 @@ use crate::backend::{BackendDevice, BackendStorage};
 use crate::op::{BackpropOp, BinaryOp, CmpOp, Op, ReduceOp, UnaryOp};
 use crate::scalar::TensorOrScalar;
 use crate::shape::{Dim, Dims, ShapeWithOneHole};
-use crate::{bail, storage::Storage, DType, Device, Error, Layout, Result, Shape};
+use crate::{DType, Device, Error, Layout, Result, Shape, bail, storage::Storage};
 use std::sync::{Arc, RwLock};
 
 /// Unique identifier for tensors.
@@ -1774,7 +1774,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(storage) => from_cpu_storage(storage),
-            Storage::Cuda(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
             Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
@@ -1805,7 +1804,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(storage) => from_cpu_storage(storage),
-            Storage::Cuda(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
             Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
@@ -1846,7 +1844,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(storage) => from_cpu_storage(storage),
-            Storage::Cuda(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
             Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
@@ -2198,20 +2195,10 @@ impl Tensor {
             Ok(self.clone())
         } else {
             let storage = match (&*self.storage(), device) {
-                (Storage::Cpu(storage), Device::Cuda(cuda)) => {
-                    Storage::Cuda(cuda.storage_from_cpu_storage(storage)?)
-                }
                 (Storage::Cpu(storage), Device::Metal(metal)) => {
                     Storage::Metal(metal.storage_from_cpu_storage(storage)?)
                 }
-                (Storage::Cuda(storage), Device::Cpu) => Storage::Cpu(storage.to_cpu_storage()?),
                 (Storage::Metal(storage), Device::Cpu) => Storage::Cpu(storage.to_cpu_storage()?),
-                (Storage::Cuda(storage), Device::Cuda(cuda)) => {
-                    // TODO: Avoid passing through the cpu storage here, especially if the gpu ids
-                    // are the same.
-                    let cpu_storage = storage.to_cpu_storage()?;
-                    Storage::Cuda(cuda.storage_from_cpu_storage(&cpu_storage)?)
-                }
                 (Storage::Cpu(storage), Device::Cpu) => Storage::Cpu(storage.clone()),
                 _ => {
                     bail!(
@@ -2697,7 +2684,8 @@ impl Tensor {
             }
             if end_excluded - start_included != src_dims[i] {
                 bail!(
-                    "slice-assign: the range for dim {i} ({start_included}..{end_excluded}) does not match the size of src {}", src_dims[i]
+                    "slice-assign: the range for dim {i} ({start_included}..{end_excluded}) does not match the size of src {}",
+                    src_dims[i]
                 )
             }
             src = src.pad_with_zeros(i, start_included, self_dims[i] - end_excluded)?;

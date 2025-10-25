@@ -7,10 +7,8 @@ members = [
     "candle-examples",
     "candle-nn",
     "candle-book",
-    "candle-flash-attn",
     "candle-onnx",
     "candle-transformers",
-    "candle-kernels",
     "tensor-tools",
     "candle-metal-kernels",
 ]
@@ -29,15 +27,11 @@ license = "Apache-2.0"
 license-file = "LICENSE-APACHE"
 
 [workspace.dependencies]
-ab_glyph = "0.*"
-accelerate-src = { version = "0.*" }
-anyhow = { version = "1.*", features = ["backtrace"] }
-bindgen_cuda = "0.*"
+accelerate-src = "0.*"
+anyhow = "1.*"
 byteorder = "1.*"
 candle = { path = "./candle-core", package = "candle-core" }
 candle-datasets = { path = "./candle-datasets" }
-candle-flash-attn = { path = "./candle-flash-attn" }
-candle-kernels = { path = "./candle-kernels" }
 candle-metal-kernels = { path = "./candle-metal-kernels" }
 candle-nn = { path = "./candle-nn" }
 candle-onnx = { path = "./candle-onnx" }
@@ -47,18 +41,6 @@ console_error_panic_hook = "0.*"
 cpal = "0.*"
 criterion = { version = "0.*", default-features = false }
 csv = "1.*"
-cudarc = { version = "0.*", features = [
-    "std",
-    "cublas",
-    "cublaslt",
-    "curand",
-    "driver",
-    "nvrtc",
-    "f16",
-    "f8",
-    "cuda-version-from-build-system",
-    "dynamic-linking",
-], default-features = false }
 enterpolation = "0.*"
 fancy-regex = "0.*"
 float8 = { version = "0.*", features = ["num-traits", "rand_distr"] }
@@ -117,7 +99,6 @@ tracing = "0.*"
 tracing-chrome = "0.*"
 tracing-subscriber = "0.*"
 ug = "0.*"
-ug-cuda = "0.*"
 ug-metal = "0.*"
 wasm-bindgen = "0.*"
 wasm-bindgen-futures = "0.*"
@@ -146,6 +127,7 @@ yew = { version = "0.*", features = ["csr"] }
 yew-agent = "0.*"
 yoke = { version = "0.*", features = ["derive"] }
 zip = { version = "6.*", default-features = false }
+ab_glyph = "0.*"
 
 [profile.release-with-debug]
 inherits = "release"

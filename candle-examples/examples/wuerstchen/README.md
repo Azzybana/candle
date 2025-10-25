@@ -20,7 +20,7 @@ flags to use local files instead, run with `--help` to learn about them.
 ## Running some example.
 
 ```bash
-cargo run --example wuerstchen --release --features cuda,cudnn -- \
+cargo run --example wuerstchen --release -- \
   --prompt "Anthropomorphic cat dressed as a fire fighter"
 ```
 

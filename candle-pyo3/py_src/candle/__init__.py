@@ -10,22 +10,6 @@ except ImportError as e:
     import os
     import platform
 
-    def locate_cuda_dlls():
-        logging.warning("Locating CUDA DLLs...")
-        # Try to locate CUDA_PATH environment variable
-        cuda_path = os.environ.get("CUDA_PATH", None)
-        if cuda_path:
-            logging.warning(f"Found CUDA_PATH environment variable: {cuda_path}")
-            if platform.system() == "Windows":
-                cuda_path = os.path.join(cuda_path, "bin")
-            else:
-                cuda_path = os.path.join(cuda_path, "lib64")
-
-            logging.warning(f"Adding {cuda_path} to DLL search path...")
-            os.add_dll_directory(cuda_path)
-        else:
-            logging.warning("CUDA_PATH environment variable not found!")
-
     def locate_mkl_dlls():
         # Try to locate ONEAPI_ROOT environment variable
         oneapi_root = os.environ.get("ONEAPI_ROOT", None)
@@ -42,7 +26,6 @@ except ImportError as e:
         else:
             logging.warning("ONEAPI_ROOT environment variable not found!")
 
-    locate_cuda_dlls()
     locate_mkl_dlls()
 
     try:

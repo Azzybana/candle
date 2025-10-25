@@ -4,7 +4,7 @@
 
 ```
 wget https://arxiv.org/pdf/1706.03762.pdf
-cargo run --features cuda,pdf2image --release --example colpali -- --prompt "What is Positional Encoding" --pdf "1706.03762.pdf"
+cargo run --features pdf2image --release --example colpali -- --prompt "What is Positional Encoding" --pdf "1706.03762.pdf"
 ```
 
 ```

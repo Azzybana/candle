@@ -11,7 +11,7 @@ cargo run --example blip --release -- --image candle-examples/examples/yolo-v8/a
 ```
 
 ```
-Running on CPU, to run on GPU, build this example with `--features cuda`
+Running on CPU
 loaded image Tensor[dims 3, 384, 384; f32]
 model built
 several cyclists are riding down a road with cars behind them%

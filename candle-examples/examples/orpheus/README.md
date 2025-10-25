@@ -8,7 +8,5 @@ Orpheus is a 3B text-to-speech model based on Llama.
 
 
 ```bash
-cargo run --example orpheus --features cuda -r
+cargo run --example orpheus -r
 ```
-
-

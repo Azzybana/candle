@@ -11,9 +11,8 @@ _ArrayLike = Union[
 ]
 
 CPU: str = "cpu"
-CUDA: str = "cuda"
 
-Device = TypeVar("Device", CPU, CUDA)
+Device = TypeVar("Device", CPU)
 
 Scalar = Union[int, float]
 

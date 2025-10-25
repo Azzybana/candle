@@ -21,7 +21,7 @@ Stella_en_1.5B_v5 is trained by [MRL](https://arxiv.org/abs/2205.13147) enabling
 The following reproduces the example in the [model card](https://huggingface.co/dunzhang/stella_en_1.5B_v5) for a retrieval task (s2p). The sample queries and docs are hardcoded in the example.
 
 ```bash
-$ cargo run --example stella-en-v5 --release --features <metal | cuda> -- --which 1.5b
+$ cargo run --example stella-en-v5 --release --features metal -- --which 1.5b
 
 >
 > Score: 0.8178786
@@ -38,7 +38,7 @@ $ cargo run --example stella-en-v5 --release --features <metal | cuda> -- --whic
 > of cancer. The polyphenols in green tea may also have anti-inflammatory and weight loss properties.
 >
 
-$ cargo run --example stella-en-v5 --release --features <metal | cuda> -- --which 400m
+$ cargo run --example stella-en-v5 --release --features metal -- --which 400m
 
 >
 > Score: 0.8397539

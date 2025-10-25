@@ -33,6 +33,5 @@ accelerate = [
     "dep:accelerate-src",
     "candle/accelerate",
 ] # Use Accelerate framework on macOS
-cuda = ["candle/cuda"] # Enable CUDA acceleration
 mkl = ["dep:intel-mkl-src", "candle/mkl"] # Use Intel MKL for BLAS
 onnx = ["dep:candle-onnx"] # Enable ONNX support

@@ -114,7 +114,6 @@ pub trait BackendStorage: Sized {
     fn copy_strided_src(&self, _: &mut Self, _: usize, _: &Layout) -> Result<()>;
 
     #[allow(clippy::too_many_arguments)]
-    // Similar to cudaMemcpy2D, though values are in elements and not in bytes.
     fn copy2d(
         &self,
         _: &mut Self,

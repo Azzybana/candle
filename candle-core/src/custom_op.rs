@@ -1,6 +1,6 @@
 use crate::op::{BackpropOp, Op};
 use crate::tensor::from_storage;
-use crate::{CpuStorage, CudaStorage, Layout, MetalStorage, Result, Shape, Tensor};
+use crate::{CpuStorage, Layout, MetalStorage, Result, Shape, Tensor};
 use std::sync::Arc;
 
 /// Unary ops that can be defined in user-land.
@@ -11,14 +11,6 @@ pub trait CustomOp1 {
     /// The forward pass, as run on a cpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
     fn cpu_fwd(&self, storage: &CpuStorage, layout: &Layout) -> Result<(CpuStorage, Shape)>;
-
-    /// The forward pass, as run on a gpu device. Note that the storage can use arbitrary strides,
-    /// offsets etc so the associated layout should be used to access it.
-    fn cuda_fwd(&self, _storage: &CudaStorage, _layout: &Layout) -> Result<(CudaStorage, Shape)> {
-        Err(crate::Error::Cuda(
-            format!("no cuda implementation for {}", self.name()).into(),
-        ))
-    }
 
     /// The forward pass, as run on a metal gpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
@@ -52,20 +44,6 @@ pub trait CustomOp2 {
         s2: &CpuStorage,
         l2: &Layout,
     ) -> Result<(CpuStorage, Shape)>;
-
-    /// The forward pass, as run on a gpu device. Note that the storage can use arbitrary strides,
-    /// offsets etc so the associated layout should be used to access it.
-    fn cuda_fwd(
-        &self,
-        _: &CudaStorage,
-        _: &Layout,
-        _: &CudaStorage,
-        _: &Layout,
-    ) -> Result<(CudaStorage, Shape)> {
-        Err(crate::Error::Cuda(
-            format!("no cuda implementation for {}", self.name()).into(),
-        ))
-    }
 
     /// The forward pass, as run on a metal gpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
@@ -106,22 +84,6 @@ pub trait CustomOp3 {
         s3: &CpuStorage,
         l3: &Layout,
     ) -> Result<(CpuStorage, Shape)>;
-
-    /// The forward pass, as run on a gpu device. Note that the storage can use arbitrary strides,
-    /// offsets etc so the associated layout should be used to access it.
-    fn cuda_fwd(
-        &self,
-        _: &CudaStorage,
-        _: &Layout,
-        _: &CudaStorage,
-        _: &Layout,
-        _: &CudaStorage,
-        _: &Layout,
-    ) -> Result<(CudaStorage, Shape)> {
-        Err(crate::Error::Cuda(
-            format!("no cuda implementation for {}", self.name()).into(),
-        ))
-    }
 
     /// The forward pass, as run on a metal gpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
@@ -255,14 +217,6 @@ pub trait InplaceOp1 {
     /// offsets etc so the associated layout should be used to access it.
     fn cpu_fwd(&self, storage: &mut CpuStorage, layout: &Layout) -> Result<()>;
 
-    /// The forward pass, as run on a gpu device. Note that the storage can use arbitrary strides,
-    /// offsets etc so the associated layout should be used to access it.
-    fn cuda_fwd(&self, _storage: &mut CudaStorage, _layout: &Layout) -> Result<()> {
-        Err(crate::Error::Cuda(
-            format!("no cuda implementation for {}", self.name()).into(),
-        ))
-    }
-
     /// The forward pass, as run on a metal gpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
     fn metal_fwd(&self, _storage: &mut MetalStorage, _layout: &Layout) -> Result<()> {
@@ -278,15 +232,7 @@ pub trait InplaceOp2 {
     /// The forward pass, as run on a cpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
     fn cpu_fwd(&self, s1: &mut CpuStorage, l1: &Layout, s2: &CpuStorage, l2: &Layout)
-        -> Result<()>;
-
-    /// The forward pass, as run on a gpu device. Note that the storage can use arbitrary strides,
-    /// offsets etc so the associated layout should be used to access it.
-    fn cuda_fwd(&self, _: &mut CudaStorage, _: &Layout, _: &CudaStorage, _: &Layout) -> Result<()> {
-        Err(crate::Error::Cuda(
-            format!("no cuda implementation for {}", self.name()).into(),
-        ))
-    }
+    -> Result<()>;
 
     /// The forward pass, as run on a metal gpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
@@ -317,22 +263,6 @@ pub trait InplaceOp3 {
         s3: &CpuStorage,
         l3: &Layout,
     ) -> Result<()>;
-
-    /// The forward pass, as run on a gpu device. Note that the storage can use arbitrary strides,
-    /// offsets etc so the associated layout should be used to access it.
-    fn cuda_fwd(
-        &self,
-        _: &mut CudaStorage,
-        _: &Layout,
-        _: &CudaStorage,
-        _: &Layout,
-        _: &CudaStorage,
-        _: &Layout,
-    ) -> Result<()> {
-        Err(crate::Error::Cuda(
-            format!("no cuda implementation for {}", self.name()).into(),
-        ))
-    }
 
     /// The forward pass, as run on a metal gpu device. Note that the storage can use arbitrary strides,
     /// offsets etc so the associated layout should be used to access it.
@@ -378,8 +308,6 @@ impl Tensor {
 
 pub struct UgIOp1 {
     name: &'static str,
-    #[cfg(feature = "cuda")]
-    func: cudarc::driver::CudaFunction,
     #[cfg(feature = "metal")]
     func: candle_metal_kernels::metal::ComputePipeline,
 }
@@ -392,22 +320,13 @@ impl UgIOp1 {
         kernel: ug::lang::ssa::Kernel,
         device: &crate::Device,
     ) -> Result<Self> {
-        #[cfg(feature = "cuda")]
-        {
-            let device = device.as_cuda_device()?;
-            let func = device.compile(name, kernel)?;
-            Ok(Self {
-                name,
-                func: func.into_cuda_function(),
-            })
-        }
         #[cfg(feature = "metal")]
         {
             let device = device.as_metal_device()?;
             let func = device.compile(name, kernel)?;
             Ok(Self { name, func })
         }
-        #[cfg(not(any(feature = "cuda", feature = "metal")))]
+        #[cfg(not(feature = "metal"))]
         {
             Ok(Self { name })
         }
@@ -420,7 +339,7 @@ impl InplaceOp1 for UgIOp1 {
     }
 
     fn cpu_fwd(&self, _: &mut CpuStorage, _: &Layout) -> Result<()> {
-        crate::bail!("ug ops are only supported on metal/cuda at the moment")
+        crate::bail!("ug ops are only supported on metal at the moment")
     }
 
     #[cfg(feature = "metal")]
@@ -457,35 +376,6 @@ impl InplaceOp1 for UgIOp1 {
         encoder.use_resource(sto.buffer(), objc2_metal::MTLResourceUsage::Write);
         encoder.dispatch_threads(grid_dims, group_dims);
 
-        Ok(())
-    }
-
-    #[cfg(feature = "cuda")]
-    fn cuda_fwd(&self, sto: &mut CudaStorage, layout: &Layout) -> Result<()> {
-        use crate::cuda_backend::WrapErr;
-        use cudarc::driver::PushKernelArg;
-
-        let elem_count = layout.shape().elem_count();
-        let stream = sto.device.cuda_stream();
-        // TODO: support more dtypes.
-        let sto = sto.as_cuda_slice::<f32>()?;
-        let sto = match layout.contiguous_offsets() {
-            None => crate::bail!("input has to be contiguous"),
-            Some((o1, o2)) => sto.slice(o1..o2),
-        };
-        let (g, b) = if elem_count % 32 == 0 {
-            (elem_count / 32, 32)
-        } else {
-            (elem_count, 1)
-        };
-        let cfg = cudarc::driver::LaunchConfig {
-            grid_dim: (g as u32, 1, 1),
-            block_dim: (b as u32, 1, 1),
-            shared_mem_bytes: 0,
-        };
-        let mut builder = stream.launch_builder(&self.func);
-        builder.arg(&sto);
-        unsafe { builder.launch(cfg) }.w()?;
         Ok(())
     }
 }

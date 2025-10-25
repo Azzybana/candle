@@ -1,7 +1,6 @@
 import candle
 from candle import Tensor, QTensor
 from candle.nn import Module, Linear
-from candle.utils import cuda_is_available
 
 import pytest
 
@@ -133,29 +132,3 @@ def test_module_dequantizes_tensors_automatically():
     a = A()
     a.load_state_dict(statedict)
     assert isinstance(a.t, Tensor)
-
-
-@pytest.mark.skipif(not cuda_is_available(), reason="CUDA is not available")
-def test_module_can_be_moved_to_cuda():
-    class A(Module):
-        def __init__(self):
-            super().__init__()
-            self.t = candle.randn((16, 256))
-
-    a = A()
-    a.cuda()
-    assert a.t.device == "cuda"
-
-
-@pytest.mark.skipif(not cuda_is_available(), reason="CUDA is not available")
-def test_module_can_be_moved_from_cuda_to_cpu():
-    class A(Module):
-        def __init__(self):
-            super().__init__()
-            self.t = candle.randn((16, 256))
-
-    a = A()
-    a.cuda()
-    assert a.t.device == "cuda"
-    a.cpu()
-    assert a.t.device == "cpu"

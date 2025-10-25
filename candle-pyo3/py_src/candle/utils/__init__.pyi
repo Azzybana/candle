@@ -5,13 +5,6 @@ from candle.typing import _ArrayLike, Device, Scalar, Index, Shape
 from candle import Tensor, DType, QTensor
 
 @staticmethod
-def cuda_is_available() -> bool:
-    """
-    Returns true if the 'cuda' backend is available.
-    """
-    pass
-
-@staticmethod
 def get_num_threads() -> int:
     """
     Returns the number of threads used by the candle.

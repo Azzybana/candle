@@ -28,7 +28,7 @@ This documents the main changes to the `candle` crate.
 
 - Support for simd128 intrinsics in some quantized vecdots
   [982](https://github.com/huggingface/candle/pull/982).
-- Optimize the index-select cuda kernel
+- Optimize the index-select kernel
   [976](https://github.com/huggingface/candle/pull/976).
 - Self-contained safetensor wrappers
   [946](https://github.com/huggingface/candle/pull/946).
@@ -75,7 +75,7 @@ This documents the main changes to the `candle` crate.
   [690](https://github.com/huggingface/candle/pull/690).
 - Faster softmax operation
   [747](https://github.com/huggingface/candle/pull/747).
-- Faster convolution operations on CPU and CUDA via im2col
+- Faster convolution operations on CPU via im2col
   [802](https://github.com/huggingface/candle/pull/802).
 - Moving some models to a more central location
   [796](https://github.com/huggingface/candle/pull/796).

@@ -22,7 +22,6 @@ impl Model {
 }
 
 fn main() -> Result<()> {
-    // Use Device::new_cuda(0)?; to use the GPU.
     let device = Device::Cpu;
 
     let first = Tensor::randn(0f32, 1.0, (784, 100), &device)?;
@@ -105,9 +104,7 @@ This will change the model running code into a new function
 #     }
 # }
 fn main() -> Result<()> {
-    // Use Device::new_cuda(0)?; to use the GPU.
-    // Use Device::Cpu; to use the CPU.
-    let device = Device::cuda_if_available(0)?;
+    let device = Device::Cpu;
 
     // Creating a dummy model
     let weight = Tensor::randn(0f32, 1.0, (784, 100), &device)?;
@@ -163,7 +160,6 @@ impl Model {
 }
 
 fn main() -> Result<()> {
-    // Use Device::new_cuda(0)?; to use the GPU.
     let device = Device::Cpu;
 
     // This has changed (784, 100) -> (100, 784) !

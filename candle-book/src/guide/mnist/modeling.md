@@ -21,7 +21,6 @@ impl Model {
 }
 
 fn main() -> Result<()> {
-    // Use Device::new_cuda(0)?; to utilize GPU acceleration.
     let device = Device::Cpu;
 
     let first = Tensor::randn(0f32, 1.0, (784, 100), &device)?;
@@ -81,9 +80,7 @@ impl Model {
 }
 
 fn main() -> Result<()> {
-    // Use Device::new_cuda(0)?; for GPU acceleration.
-    // Use Device::Cpu; for CPU computation.
-    let device = Device::cuda_if_available(0)?;
+    let device = Device::Cpu;
 
     // Initialize model parameters
     let weight = Tensor::randn(0f32, 1.0, (784, 100), &device)?;
@@ -143,7 +140,6 @@ impl Model {
 }
 
 fn main() -> Result<()> {
-    // Use Device::new_cuda(0)?; for GPU acceleration.
     let device = Device::Cpu;
 
     // Note the dimension change: (784, 100) -> (100, 784)

@@ -42,7 +42,7 @@ impl Linear {
 impl super::Module for Linear {
     fn forward(&self, x: &Tensor) -> candle::Result<Tensor> {
         // When possible, we avoid using a broadcasted matmul as it is much slower
-        // than the standard matmul for the cuda and cpu backends.
+        // than the standard matmul for the cpu backend.
         let x = match *x.dims() {
             [b1, b2, m, k] => {
                 if x.is_contiguous() {
