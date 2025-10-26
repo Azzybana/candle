@@ -26,8 +26,6 @@ This documents the main changes to the `candle` crate.
 
 ### Modified
 
-- Support for simd128 intrinsics in some quantized vecdots
-  [982](https://github.com/huggingface/candle/pull/982).
 - Optimize the index-select kernel
   [976](https://github.com/huggingface/candle/pull/976).
 - Self-contained safetensor wrappers

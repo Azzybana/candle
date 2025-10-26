@@ -30,7 +30,3 @@ half = { workspace = true }
 anyhow = { workspace = true }
 rand = { workspace = true }
 rand_distr = { workspace = true }
-
-[profile.profiling]
-inherits = "release"
-debug = 2
