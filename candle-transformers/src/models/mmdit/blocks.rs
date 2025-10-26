@@ -334,8 +334,7 @@ impl JointBlock for MMDiTJointBlock {
     fn forward(&self, context: &Tensor, x: &Tensor, c: &Tensor) -> Result<(Tensor, Tensor)> {
         let (context_qkv, context_interm) = self.context_block.pre_attention(context, c)?;
         let (x_qkv, x_interm) = self.x_block.pre_attention(x, c)?;
-        let (context_attn, x_attn) =
-            joint_attn(&context_qkv, &x_qkv, self.num_heads, self.use_flash_attn)?;
+        let (context_attn, x_attn) = joint_attn(&context_qkv, &x_qkv, self.num_heads)?;
         let context_out =
             self.context_block
                 .post_attention(&context_attn, context, &context_interm)?;
@@ -374,9 +373,8 @@ impl JointBlock for MMDiTXJointBlock {
     fn forward(&self, context: &Tensor, x: &Tensor, c: &Tensor) -> Result<(Tensor, Tensor)> {
         let (context_qkv, context_interm) = self.context_block.pre_attention(context, c)?;
         let (x_qkv, x_qkv2, x_interm) = self.x_block.pre_attention(x, c)?;
-        let (context_attn, x_attn) =
-            joint_attn(&context_qkv, &x_qkv, self.num_heads, self.use_flash_attn)?;
-        let x_attn2 = attn(&x_qkv2, self.num_heads, self.use_flash_attn)?;
+        let (context_attn, x_attn) = joint_attn(&context_qkv, &x_qkv, self.num_heads)?;
+        let x_attn2 = attn(&x_qkv2, self.num_heads)?;
         let context_out =
             self.context_block
                 .post_attention(&context_attn, context, &context_interm)?;
