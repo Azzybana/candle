@@ -50,20 +50,6 @@ The default scheduler for the XL Turbo version is the Euler Ancestral scheduler.
 - `--bsize`: the numbers of samples to generate simultaneously.
 - `--final-image`: the filename for the generated image(s).
 
-### Using flash-attention
-
-Using flash attention makes image generation a lot faster and uses less memory.
-The downside is some long compilation time. You can set the
-`CANDLE_FLASH_ATTN_BUILD_DIR` environment variable to something like
-`/home/user/.candle` to ensures that the compilation artifacts are properly
-cached.
-
-Enabling flash-attention requires both a feature flag, `--features flash-attn`
-and using the command line flag `--use-flash-attn`.
-
-Note that flash-attention-v2 is only compatible with Ampere, Ada, or Hopper GPUs
-(e.g., A100/H100, RTX 3090/4090).
-
 ## Image to Image Pipeline
 ...
 

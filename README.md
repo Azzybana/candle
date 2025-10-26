@@ -160,7 +160,6 @@ If you have an addition to this list, please submit a pull request.
 
 - Simple syntax, looks and feels like PyTorch.
     - Model training.
-    - Embed user-defined ops/kernels, such as [flash-attention v2](https://github.com/huggingface/candle/blob/89ba005962495f2bfbda286e185e9c3c7f5300a3/candle-flash-attn/src/lib.rs#L152).
 - Backends.
     - Optimized CPU backend with optional MKL support for x86 and Accelerate for macs.
 - Included models.

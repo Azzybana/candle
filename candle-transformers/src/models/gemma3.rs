@@ -166,13 +166,11 @@ struct Attention {
     attn_logit_softcapping: Option<f64>,
     rotary_emb: Arc<RotaryEmbedding>,
     kv_cache: KvCache,
-    use_flash_attn: bool,
 }
 
 impl Attention {
     fn new(
         rotary_emb: Arc<RotaryEmbedding>,
-        use_flash_attn: bool,
         cfg: &Config,
         sliding_window: Option<usize>,
         vb: VarBuilder,
@@ -211,7 +209,6 @@ impl Attention {
             attn_logit_softcapping: cfg.attn_logit_softcapping,
             rotary_emb,
             kv_cache,
-            use_flash_attn,
         })
     }
 
@@ -252,14 +249,7 @@ impl Attention {
         let value_states =
             crate::utils::repeat_kv(value_states, self.num_kv_groups)?.contiguous()?;
 
-        let attn_output = if self.use_flash_attn {
-            // flash-attn expects (b_sz, seq_len, nheads, head_dim)
-            let q = query_states.transpose(1, 2)?;
-            let k = key_states.transpose(1, 2)?;
-            let v = value_states.transpose(1, 2)?;
-            let scale = 1f32 / (self.head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, scale, attention_mask.is_some())?.transpose(1, 2)?
-        } else {
+        let attn_output = {
             let scale = 1f64 / f64::sqrt(self.head_dim as f64);
             let attn_weights = (query_states.matmul(&key_states.transpose(2, 3)?)? * scale)?;
 
@@ -289,8 +279,6 @@ impl Attention {
     }
 }
 
-
-
 #[derive(Debug, Clone)]
 struct DecoderLayer {
     self_attn: Attention,
@@ -315,13 +303,7 @@ impl DecoderLayer {
             vb.device(),
             sliding_window,
         )?);
-        let self_attn = Attention::new(
-            rotary_emb,
-            use_flash_attn,
-            cfg,
-            sliding_window,
-            vb.pp("self_attn"),
-        )?;
+        let self_attn = Attention::new(rotary_emb, cfg, sliding_window, vb.pp("self_attn"))?;
         let mlp = MLP::new(cfg, vb.pp("mlp"))?;
         let input_layernorm =
             RmsNorm::new(cfg.hidden_size, cfg.rms_norm_eps, vb.pp("input_layernorm"))?;
@@ -433,7 +415,6 @@ impl Model {
         for layer_idx in 0..cfg.num_hidden_layers {
             let sliding_window = (layer_idx + 1) % cfg.sliding_window_pattern > 0;
             let layer = DecoderLayer::new(
-                use_flash_attn,
                 cfg,
                 vb_l.pp(layer_idx),
                 sliding_window.then_some(cfg.sliding_window),

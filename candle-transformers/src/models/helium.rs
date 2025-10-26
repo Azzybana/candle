@@ -29,8 +29,6 @@ pub struct Config {
     pub rope_theta: f64,
     pub tie_word_embeddings: bool,
     pub vocab_size: usize,
-    #[serde(default = "default_use_flash_attn")]
-    pub use_flash_attn: bool,
 }
 
 impl Config {
@@ -133,8 +131,6 @@ impl Module for MLP {
     }
 }
 
-
-
 #[derive(Debug, Clone)]
 struct Attention {
     q_proj: Linear,
@@ -219,14 +215,7 @@ impl Attention {
         let key_states = crate::utils::repeat_kv(key_states, self.num_kv_groups)?;
         let value_states = crate::utils::repeat_kv(value_states, self.num_kv_groups)?;
 
-        let attn_output = if self.use_flash_attn {
-            // flash-attn expects (b_sz, seq_len, nheads, head_dim)
-            let q = query_states.transpose(1, 2)?;
-            let k = key_states.transpose(1, 2)?;
-            let v = value_states.transpose(1, 2)?;
-            let softmax_scale = 1f32 / (self.head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, softmax_scale, q_len > 1)?.transpose(1, 2)?
-        } else {
+        let attn_output = {
             let scale = 1f64 / f64::sqrt(self.head_dim as f64);
             let attn_weights = (query_states.matmul(&key_states.transpose(2, 3)?)? * scale)?;
 

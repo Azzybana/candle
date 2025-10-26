@@ -144,16 +144,7 @@ impl LayerWeights {
         let k = crate::utils::repeat_kv(k, self.n_head / self.n_kv_head)?;
         let v = crate::utils::repeat_kv(v, self.n_head / self.n_kv_head)?;
 
-        let y = if self.use_flash_attn {
-            // flash-attn expects (b_sz, seq_len, nheads, head_dim)
-            let q = q.to_dtype(DType::BF16)?.transpose(1, 2)?;
-            let k = k.to_dtype(DType::BF16)?.transpose(1, 2)?;
-            let v = v.to_dtype(DType::BF16)?.transpose(1, 2)?;
-            let softmax_scale = 1f32 / (self.head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, softmax_scale, seq_len > 1)?
-                .to_dtype(DType::F32)?
-                .transpose(1, 2)?
-        } else {
+        let y = {
             let att = (q.matmul(&k.t()?)? / (self.head_dim as f64).sqrt())?;
             let att = match mask {
                 None => att,
@@ -171,8 +162,6 @@ impl LayerWeights {
         Ok(y)
     }
 }
-
-
 
 #[derive(Debug, Clone)]
 pub struct ModelWeights {
@@ -207,7 +196,6 @@ fn precomput_freqs_cis(
 
 impl ModelWeights {
     pub fn from_gguf<R: std::io::Seek + std::io::Read>(
-        use_flash_attn: bool,
         ct: gguf_file::Content,
         reader: &mut R,
         device: &Device,

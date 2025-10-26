@@ -59,7 +59,7 @@ System specs (Desktop PCIE 5 x8/x8 dual-GPU setup):
 - CPU: i9 12900K w/o overclocking.
 - RAM: 64G dual-channel DDR5 @ 4800 MT/s
 
-| Speed (iter/s) | w/o flash-attn | w/ flash-attn |
-| -------------- | -------------- | ------------- |
-| RTX 3090 Ti    | 0.83           | 2.15          |
-| RTX 4090       | 1.72           | 4.06          |
+| Speed (iter/s) | Baseline |
+| -------------- | --------- |
+| RTX 3090 Ti    | 0.83     |
+| RTX 4090       | 1.72     |
