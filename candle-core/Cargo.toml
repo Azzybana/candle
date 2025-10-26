@@ -16,7 +16,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 byteorder = { workspace = true }
-candle-metal-kernels = { workspace = true, optional = true }
+#candle-metal-kernels = { workspace = true, optional = true }
 gemm = { workspace = true }
 half = { workspace = true }
 float8 = { workspace = true }

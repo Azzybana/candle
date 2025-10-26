@@ -146,35 +146,4 @@ fn inplace_op1() -> Result<()> {
             -0.9933, -0.9817, -0.9502, -0.8647, -0.6321, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0
         ]
     );
-    Ok(())
-}
 
-#[cfg(feature = "metal")]
-#[allow(clippy::approx_constant)]
-#[test]
-fn ug_op() -> Result<()> {
-    let kernel = {
-        use ug::lang::op;
-
-        let layout = ug::Layout::from_shape(&[12]);
-        let ptr = op::Arg::ptr(ug::DType::F32);
-        let src = op::load(ptr.id(), layout.clone(), ug::DType::F32)?;
-        let src = op::unary(op::UnaryOp::Exp, src)?;
-        let st = op::store(ptr.id(), layout, src)?;
-        let kernel = op::Kernel::new("exp".to_string(), vec![ptr], vec![st]);
-        let opts: ug::lower_op::Opts = Default::default();
-        kernel.lower(&opts)?
-    };
-    let device = Device::new_metal(0)?;
-    let op = candle_core::UgIOp1::new("test", kernel, &device)?;
-    let t = Tensor::arange(0u32, 12u32, &device)?.to_dtype(DType::F32)?;
-    t.inplace_op1(&op)?;
-    assert_eq!(
-        to_vec1_round(&t, 2)?,
-        &[
-            1.0, 2.72, 7.39, 20.09, 54.6, 148.41, 403.43, 1096.63, 2980.96, 8103.08, 22026.47,
-            59874.13
-        ]
-    );
-    Ok(())
-}

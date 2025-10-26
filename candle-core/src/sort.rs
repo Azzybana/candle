@@ -79,63 +79,12 @@ impl crate::CustomOp1 for ArgSort {
     #[cfg(feature = "metal")]
     fn metal_fwd(
         &self,
-        storage: &crate::MetalStorage,
-        layout: &crate::Layout,
+        _storage: &crate::MetalStorage,
+        _layout: &crate::Layout,
     ) -> Result<(crate::MetalStorage, crate::Shape)> {
-        use crate::DType;
-        use crate::backend::BackendStorage;
-
-        let name = {
-            if self.asc {
-                match storage.dtype() {
-                    DType::BF16 => "asort_asc_bf16",
-                    DType::F16 => "asort_asc_f16",
-                    DType::F32 => "asort_asc_f32",
-                    DType::F64 => "asort_asc_f64",
-                    DType::U8 => "asort_asc_u8",
-                    DType::U32 => "asort_asc_u32",
-                    DType::I64 => "asort_asc_i64",
-                    DType::F8E4M3 => crate::bail!("Metal device does not yet support F8E4M3."),
-                }
-            } else {
-                match storage.dtype() {
-                    DType::BF16 => "asort_desc_bf16",
-                    DType::F16 => "asort_desc_f16",
-                    DType::F32 => "asort_desc_f32",
-                    DType::F64 => "asort_desc_f64",
-                    DType::U8 => "asort_desc_u8",
-                    DType::U32 => "asort_desc_u32",
-                    DType::I64 => "asort_desc_i64",
-                    DType::F8E4M3 => crate::bail!("Metal device does not yet support F8E4M3."),
-                }
-            }
-        };
-        let device = storage.device();
-        let kernels = device.kernels();
-        let command_buffer = device.command_buffer()?;
-        let el = layout.shape().elem_count();
-        let ncols = self.last_dim;
-        let nrows = el / ncols;
-        let src = crate::metal_backend::buffer_o(storage.buffer(), layout, storage.dtype());
-        let dst = device.new_buffer(el, DType::U32, "asort")?;
-        let mut ncols_pad = 1;
-        while ncols_pad < ncols {
-            ncols_pad *= 2;
-        }
-        candle_metal_kernels::call_arg_sort(
-            device.metal_device(),
-            &command_buffer,
-            kernels,
-            name,
-            nrows,
-            ncols,
-            ncols_pad,
-            src,
-            &dst,
-        )
-        .map_err(crate::Error::wrap)?;
-        let dst = crate::MetalStorage::new(dst, device.clone(), el, DType::U32);
-        Ok((dst, layout.shape().clone()))
+        Err(crate::Error::Metal(
+            format!("no metal implementation for {}", self.name()).into(),
+        ))
     }
 }
 
