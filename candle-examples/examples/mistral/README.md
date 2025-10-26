@@ -11,7 +11,8 @@ This example supports the initial model as well as a quantized variant.
 ## Running the example
 
 ```bash
-$ cargo run --example mistral --release --features cuda -- --prompt 'Write helloworld code in Rust' --sample-len 150
+```bash
+$ cargo run --example mistral --release -- --prompt 'Write helloworld code in Rust' --sample-len 150
 
 Generated text:
 Write helloworld code in Rust

@@ -13,7 +13,8 @@ Other available models are Stable-Code-3B, StableLM-2 and Zephyr variants.
 ## Running some example
 
 ```bash
-$ cargo run --example stable-lm --release --features cuda -- --prompt 'What is the most efficient programming language in use?' --sample-len 150
+```bash
+$ cargo run --example stable-lm --release -- --prompt 'What is the most efficient programming language in use?' --sample-len 150
 avx: true, neon: false, simd128: false, f16c: true
 temp: 0.00 repeat-penalty: 1.10 repeat-last-n: 64
 retrieved the files in 126.593µs

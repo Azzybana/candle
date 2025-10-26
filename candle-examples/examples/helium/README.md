@@ -11,7 +11,7 @@ compared to existing open weights models.
 ## Running the example
 
 ```bash
-$ cargo run --example helium --release --features cuda -- --prompt 'Write helloworld code in Rust' --sample-len 150
+$ cargo run --example helium --release -- --prompt 'Write helloworld code in Rust' --sample-len 150
 ```
 
 

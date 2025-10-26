@@ -6,18 +6,8 @@ pub mod token_output_stream;
 pub mod wav;
 use candle::{Device, Result, Tensor};
 
-pub fn device(cpu: bool) -> Result<Device> {
-    if cpu {
-        Ok(Device::Cpu)
-    } else {
-        match Device::new_cuda(0) {
-            Ok(d) => Ok(d),
-            Err(_) => {
-                println!("Running on CPU");
-                Ok(Device::Cpu)
-            }
-        }
-    }
+pub fn device(_cpu: bool) -> Result<Device> {
+    Ok(Device::Cpu)
 }
 
 pub fn load_image<P: AsRef<std::path::Path>>(

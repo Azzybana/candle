@@ -228,9 +228,9 @@ fn qmm_batch(dev: &Device) -> Result<()> {
     Ok(())
 }
 
-test_device!(quantized_matmul, qmm_cpu, qmm_metal);
-test_device!(quantized_matmul_neg, qmm_n_cpu, qmm_n_metal);
-test_device!(qmm_batch, qmm_b_cpu, qmm_b_metal);
+test_device!(quantized_matmul, qmm_cpu);
+test_device!(quantized_matmul_neg, qmm_n_cpu);
+test_device!(qmm_batch, qmm_b_cpu);
 
 fn quantize_q4_0(device: &Device) -> Result<()> {
     let src = (0..32 * 4).map(|v| v as f32).collect::<Vec<_>>();
@@ -724,16 +724,16 @@ fn quantize_q8k(device: &Device) -> Result<()> {
     Ok(())
 }
 
-test_device!(quantize_q4_0, quantize_q4_0_cpu, quantize_q4_0_metal);
-test_device!(quantize_q4_1, quantize_q4_1_cpu, quantize_q4_1_metal);
-test_device!(quantize_q5_0, quantize_q5_0_cpu, quantize_q5_0_metal);
-test_device!(quantize_q5_1, quantize_q5_1_cpu, quantize_q5_1_metal);
-test_device!(quantize_q2k, quantize_q2k_cpu, quantize_q2k_metal);
-test_device!(quantize_q3k, quantize_q3k_cpu, quantize_q3k_metal);
-test_device!(quantize_q4k, quantize_q4k_cpu, quantize_q4k_metal);
-test_device!(quantize_q5k, quantize_q5k_cpu, quantize_q5k_metal);
-test_device!(quantize_q6k, quantize_q6k_cpu, quantize_q6k_metal);
-test_device!(quantize_q8k, quantize_q8k_cpu, quantize_q8k_metal);
+test_device!(quantize_q4_0, quantize_q4_0_cpu);
+test_device!(quantize_q4_1, quantize_q4_1_cpu);
+test_device!(quantize_q5_0, quantize_q5_0_cpu);
+test_device!(quantize_q5_1, quantize_q5_1_cpu);
+test_device!(quantize_q2k, quantize_q2k_cpu);
+test_device!(quantize_q3k, quantize_q3k_cpu);
+test_device!(quantize_q4k, quantize_q4k_cpu);
+test_device!(quantize_q5k, quantize_q5k_cpu);
+test_device!(quantize_q6k, quantize_q6k_cpu);
+test_device!(quantize_q8k, quantize_q8k_cpu);
 
 /// Very simple dot product implementation
 fn vec_dot_reference(a: &[f32], b: &[f32]) -> f32 {
@@ -877,87 +877,75 @@ fn get_random_tensors(
 macro_rules! quantized_matmul {
     // TODO: Switch to generating the two last arguments automatically once concat_idents is
     // stable. https://github.com/rust-lang/rust/issues/29599
-    ($fn_name: ident, $fn_name_cpu: ident, $fn_name_metal: ident, $dtype: expr) => {
+    ($fn_name: ident, $fn_name_cpu: ident, $dtype: expr) => {
         fn $fn_name(device: &Device) -> Result<()> {
             test_matmul(device, (1, 3, 4, 256), $dtype)?;
             Ok(())
         }
 
-        test_device!($fn_name, $fn_name_cpu, $fn_name_metal);
+        test_device!($fn_name, $fn_name_cpu);
     };
 }
 
 quantized_matmul!(
     quantized_matmul_q4_0_bis,
     quantized_matmul_q4_0_cpu,
-    quantized_matmul_q4_0_metal,
     GgmlDType::Q4_0
 );
 quantized_matmul!(
     quantized_matmul_q4_1_bis,
     quantized_matmul_q4_1_cpu,
-    quantized_matmul_q4_1_metal,
     GgmlDType::Q4_1
 );
 quantized_matmul!(
     quantized_matmul_q5_0_bis,
     quantized_matmul_q5_0_cpu,
-    quantized_matmul_q5_0_metal,
     GgmlDType::Q5_0
 );
 quantized_matmul!(
     quantized_matmul_q5_1_bis,
     quantized_matmul_q5_1_cpu,
-    quantized_matmul_q5_1_metal,
     GgmlDType::Q5_1
 );
 quantized_matmul!(
     quantized_matmul_q8_0_bis,
     quantized_matmul_q8_0_cpu,
-    quantized_matmul_q8_0_metal,
     GgmlDType::Q8_0
 );
 quantized_matmul!(
     quantized_matmul_q8_1_bis,
     quantized_matmul_q8_1_cpu,
-    quantized_matmul_q8_1_metal,
     GgmlDType::Q8_1
 );
 quantized_matmul!(
     quantized_matmul_q2k_bis,
     quantized_matmul_q2k_cpu,
-    quantized_matmul_q2k_metal,
     GgmlDType::Q2K
 );
 quantized_matmul!(
     quantized_matmul_q3k_bis,
     quantized_matmul_q3k_cpu,
-    quantized_matmul_q3k_metal,
     GgmlDType::Q3K
 );
 quantized_matmul!(
     quantized_matmul_q4k_bis,
     quantized_matmul_q4k_cpu,
-    quantized_matmul_q4k_metal,
     GgmlDType::Q4K
 );
 quantized_matmul!(
     quantized_matmul_q5k_bis,
     quantized_matmul_q5k_cpu,
-    quantized_matmul_q5k_metal,
     GgmlDType::Q5K
 );
 quantized_matmul!(
     quantized_matmul_q6k_bis,
     quantized_matmul_q6k_cpu,
-    quantized_matmul_q6k_metal,
     GgmlDType::Q6K
 );
 // Not implemented on metal
 quantized_matmul!(
     quantized_matmul_q8k_bis,
     quantized_matmul_q8k_cpu,
-    quantized_matmul_q8k_metal,
     GgmlDType::Q8K
 );
 

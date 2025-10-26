@@ -21,7 +21,8 @@ Stella_en_1.5B_v5 is trained by [MRL](https://arxiv.org/abs/2205.13147) enabling
 The following reproduces the example in the [model card](https://huggingface.co/dunzhang/stella_en_1.5B_v5) for a retrieval task (s2p). The sample queries and docs are hardcoded in the example.
 
 ```bash
-$ cargo run --example stella-en-v5 --release --features metal -- --which 1.5b
+```bash
+$ cargo run --example stella-en-v5 --release -- --which 1.5b
 
 >
 > Score: 0.8178786
