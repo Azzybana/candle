@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use candle::{DType, Tensor};
 use candle_transformers::generation::{LogitsProcessor, Sampling};

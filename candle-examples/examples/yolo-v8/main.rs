@@ -1,4 +1,3 @@
-
 mod model;
 use model::{Multiples, YoloV8, YoloV8Pose};
 

@@ -1,6 +1,6 @@
 #![allow(clippy::cast_possible_truncation, clippy::cast_precision_loss)]
 
-use candle::{DType, Device, IndexOp, Result, Tensor, D};
+use candle::{D, DType, Device, IndexOp, Result, Tensor};
 use candle_nn::VarBuilder;
 use text::Qwen3VLTextModel;
 use vision::Qwen3VLVisionModel;
@@ -228,12 +228,12 @@ impl Qwen3VLModel {
                     }
                     if img_offset != img_layer.dim(0)? || vid_offset != vid_layer.dim(0)? {
                         candle::bail!(
-                                "DeepStack feature alignment failed for images ({}/{}) or videos ({}/{})",
-                                img_offset,
-                                img_layer.dim(0)?,
-                                vid_offset,
-                                vid_layer.dim(0)?
-                            );
+                            "DeepStack feature alignment failed for images ({}/{}) or videos ({}/{})",
+                            img_offset,
+                            img_layer.dim(0)?,
+                            vid_offset,
+                            vid_layer.dim(0)?
+                        );
                     }
                     let row_refs: Vec<&Tensor> = rows.iter().collect();
                     combined_layers.push(Tensor::stack(&row_refs, 0)?);

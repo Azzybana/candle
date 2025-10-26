@@ -3,10 +3,9 @@
 //! https://huggingface.co/spaces/BVRA/PlantCLEF2024
 //! https://zenodo.org/records/10848263
 
-
 use clap::Parser;
 
-use candle::{DType, IndexOp, D};
+use candle::{D, DType, IndexOp};
 use candle_nn::{Module, VarBuilder};
 use candle_transformers::models::dinov2reg4;
 

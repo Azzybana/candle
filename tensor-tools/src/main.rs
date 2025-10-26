@@ -1,4 +1,4 @@
-use candle::quantized::{gguf_file, GgmlDType, QTensor};
+use candle::quantized::{GgmlDType, QTensor, gguf_file};
 use candle::{Device, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use rayon::prelude::*;
@@ -460,13 +460,15 @@ fn run_quantize(
         candle::bail!("no specified input files")
     }
     if let Some(extension) = out_file.extension()
-        && extension == "safetensors" {
-            candle::bail!("the generated file cannot use the safetensors extension")
-        }
+        && extension == "safetensors"
+    {
+        candle::bail!("the generated file cannot use the safetensors extension")
+    }
     if let Some(extension) = in_files[0].extension()
-        && extension == "safetensors" {
-            return run_quantize_safetensors(in_files, out_file, q);
-        }
+        && extension == "safetensors"
+    {
+        return run_quantize_safetensors(in_files, out_file, q);
+    }
 
     if in_files.len() != 1 {
         candle::bail!("only a single in-file can be used when quantizing gguf files")

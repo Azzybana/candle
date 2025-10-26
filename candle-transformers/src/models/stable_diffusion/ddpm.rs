@@ -1,8 +1,7 @@
-use super::schedulers::{betas_for_alpha_bar, BetaSchedule, PredictionType};
+use super::schedulers::{BetaSchedule, PredictionType, betas_for_alpha_bar};
 use candle::{Result, Tensor};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum DDPMVarianceType {
     #[default]
     FixedSmall,
@@ -11,7 +10,6 @@ pub enum DDPMVarianceType {
     FixedLargeLog,
     Learned,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct DDPMSchedulerConfig {

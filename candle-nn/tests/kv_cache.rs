@@ -1,4 +1,3 @@
-
 use candle::{Device, Result, Tensor};
 
 #[test]

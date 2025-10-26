@@ -2,9 +2,9 @@ use candle::test_utils::to_vec2_round;
 use candle::{DType, Device, NdArray, Result, Tensor};
 use candle_onnx::onnx::attribute_proto::AttributeType;
 use candle_onnx::onnx::tensor_proto::DataType;
-use candle_onnx::onnx::tensor_shape_proto::{dimension, Dimension};
-use candle_onnx::onnx::{type_proto, TensorProto, TensorShapeProto, TypeProto};
+use candle_onnx::onnx::tensor_shape_proto::{Dimension, dimension};
 use candle_onnx::onnx::{AttributeProto, GraphProto, ModelProto, NodeProto, ValueInfoProto};
+use candle_onnx::onnx::{TensorProto, TensorShapeProto, TypeProto, type_proto};
 use candle_onnx::simple_eval;
 use std::collections::HashMap;
 
@@ -2243,19 +2243,21 @@ fn test_reduce_max() -> Result<()> {
     // axes = np.array([-2, 0, 1], dtype=np.int64)
     // np.maximum.reduce(data, axis=tuple(axes), keepdims=True)
     // Should error out with `duplicate value in "axes"`
-    assert!(test(
-        &[
-            [[5., 1.], [20., 2.]],
-            [[30., 1.], [40., 2.]],
-            [[55., 1.], [60., 2.]],
-        ],
-        Some(vec![-2, 0, 1]),
-        1,
-        None,
-        &[[[60.]]],
-        false
-    )
-    .is_err());
+    assert!(
+        test(
+            &[
+                [[5., 1.], [20., 2.]],
+                [[30., 1.], [40., 2.]],
+                [[55., 1.], [60., 2.]],
+            ],
+            Some(vec![-2, 0, 1]),
+            1,
+            None,
+            &[[[60.]]],
+            false
+        )
+        .is_err()
+    );
 
     // Negative test - expect error
     // Should error out on empty set
@@ -2762,19 +2764,21 @@ fn test_reduce_min() -> Result<()> {
     // axes = np.array([-2, 0, 1], dtype=np.int64)
     // np.minimum.reduce(data, axis=tuple(axes), keepdims=True)
     // Should error out with `duplicate value in "axes"`
-    assert!(test(
-        &[
-            [[5., 1.], [20., 2.]],
-            [[30., 1.], [40., 2.]],
-            [[55., 1.], [60., 2.]],
-        ],
-        Some(vec![-2, 0, 1]),
-        1,
-        None,
-        &[0.],
-        false
-    )
-    .is_err());
+    assert!(
+        test(
+            &[
+                [[5., 1.], [20., 2.]],
+                [[30., 1.], [40., 2.]],
+                [[55., 1.], [60., 2.]],
+            ],
+            Some(vec![-2, 0, 1]),
+            1,
+            None,
+            &[0.],
+            false
+        )
+        .is_err()
+    );
 
     // Negative test - expect error
     // Should error out on empty set

@@ -2,8 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use candle::{DType, Device, IndexOp, Result, Tensor};
 use candle_nn::{
-    embedding, kv_cache::KvCache, linear, linear_b, rms_norm, Activation, Embedding, Linear,
-    Module, RmsNorm, VarBuilder,
+    Activation, Embedding, Linear, Module, RmsNorm, VarBuilder, embedding, kv_cache::KvCache,
+    linear, linear_b, rms_norm,
 };
 
 use super::config::TextConfig;
@@ -323,9 +323,10 @@ impl Qwen3VLTextModel {
             // Integrate DeepStack visual features when provided.
             if let (Some(visual_pos_masks), Some(deepstack)) =
                 (visual_pos_masks, deepstack_visual_embeds)
-                && i < deepstack.len() {
-                    xs = self.deepstack_process(xs, visual_pos_masks, &deepstack[i])?;
-                }
+                && i < deepstack.len()
+            {
+                xs = self.deepstack_process(xs, visual_pos_masks, &deepstack[i])?;
+            }
         }
 
         xs = xs.apply(&self.norm)?;

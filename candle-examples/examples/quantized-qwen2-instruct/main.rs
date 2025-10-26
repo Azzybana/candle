@@ -1,4 +1,3 @@
-
 use clap::{Parser, ValueEnum};
 use std::io::Write;
 use tokenizers::Tokenizer;

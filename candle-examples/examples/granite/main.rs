@@ -1,6 +1,5 @@
 // An implementation of different Granite models https://www.ibm.com/granite
 
-
 use anyhow::{Error as E, Result, bail};
 use clap::{Parser, ValueEnum};
 
@@ -214,14 +213,14 @@ fn main() -> Result<()> {
             token_generated += 1;
             tokens.push(next_token);
 
-            if let Some(model::GraniteEosToks::Single(eos_tok_id)) = eos_token_id {
-                if next_token == eos_tok_id {
-                    return Err(E::msg("EOS token found"));
-                }
-            } else if let Some(model::GraniteEosToks::Multiple(ref eos_ids)) = eos_token_id {
-                if eos_ids.contains(&next_token) {
-                    return Err(E::msg("EOS token found"));
-                }
+            if let Some(model::GraniteEosToks::Single(eos_tok_id)) = eos_token_id
+                && next_token == eos_tok_id
+            {
+                return Err(E::msg("EOS token found"));
+            } else if let Some(model::GraniteEosToks::Multiple(ref eos_ids)) = eos_token_id
+                && eos_ids.contains(&next_token)
+            {
+                return Err(E::msg("EOS token found"));
             }
 
             if let Some(t) = tokenizer.next_token(next_token)? {

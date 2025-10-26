@@ -3,8 +3,8 @@
 //! - 💻 [GitHub](https://github.com/THUDM/ChatGLM3) ChatGLM3: Advancing Multilingual Conversational Language Models with High-Quality Data
 //! - 💻 [GitHub](https://github.com/THUDM/ChatGLM2-6B) ChatGLM2-6B.
 //!
-use crate::models::with_tracing::{linear_b as linear, Linear};
-use candle::{DType, Device, IndexOp, Module, Result, Tensor, D};
+use crate::models::with_tracing::{Linear, linear_b as linear};
+use candle::{D, DType, Device, IndexOp, Module, Result, Tensor};
 use candle_nn::VarBuilder;
 
 #[derive(Debug, Clone)]

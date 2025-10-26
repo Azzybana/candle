@@ -4,7 +4,6 @@
 // TODO: Add an offline mode.
 // TODO: Add a KV cache.
 
-
 mod musicgen_model;
 
 use musicgen_model::{GenConfig, MusicgenForConditionalGeneration};

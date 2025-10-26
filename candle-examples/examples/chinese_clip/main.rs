@@ -1,4 +1,3 @@
-
 use candle::{DType, Device, Tensor};
 use candle_nn as nn;
 use candle_transformers::models::chinese_clip::{ChineseClipConfig, ChineseClipModel};

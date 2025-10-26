@@ -1,7 +1,6 @@
 //! EVA-02: Explore the limits of Visual representation at scAle
 //! https://github.com/baaivision/EVA
 
-
 use clap::Parser;
 
 use candle::{D, DType, Device, IndexOp, Result, Tensor};

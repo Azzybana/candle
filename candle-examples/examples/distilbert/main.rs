@@ -1,13 +1,12 @@
-
 use candle_transformers::models::distilbert::{
-    Config, DistilBertForMaskedLM, DistilBertModel, DTYPE,
+    Config, DTYPE, DistilBertForMaskedLM, DistilBertModel,
 };
 
 use anyhow::{Context, Error as E, Result};
 use candle::{Device, Tensor};
 use candle_nn::VarBuilder;
 use clap::{Parser, ValueEnum};
-use hf_hub::{api::sync::Api, Repo, RepoType};
+use hf_hub::{Repo, RepoType, api::sync::Api};
 use std::path::PathBuf;
 use tokenizers::Tokenizer;
 

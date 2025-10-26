@@ -1,7 +1,7 @@
-use crate::models::with_tracing::{linear, Linear};
+use crate::models::with_tracing::{Linear, linear};
 use candle::{DType, Module, Result, Tensor};
 use candle_nn::{
-    embedding, layer_norm, ops::softmax_last_dim, Activation, Embedding, LayerNorm, VarBuilder,
+    Activation, Embedding, LayerNorm, VarBuilder, embedding, layer_norm, ops::softmax_last_dim,
 };
 
 #[derive(Debug, Clone, serde::Deserialize)]

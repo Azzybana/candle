@@ -1,6 +1,5 @@
 // https://github.com/karpathy/llama2.c
 
-
 use candle_transformers::models::llama2_c as model;
 use candle_transformers::models::llama2_c_weights as weights;
 use candle_transformers::models::quantized_llama2_c as qmodel;

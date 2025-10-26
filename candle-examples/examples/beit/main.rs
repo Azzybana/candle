@@ -1,10 +1,9 @@
 //! BEiT: BERT Pre-Training of Image Transformers
 //! https://github.com/microsoft/unilm/tree/master/beit
 
-
 use clap::Parser;
 
-use candle::{DType, Device, IndexOp, Result, Tensor, D};
+use candle::{D, DType, Device, IndexOp, Result, Tensor};
 use candle_nn::{Module, VarBuilder};
 use candle_transformers::models::beit;
 

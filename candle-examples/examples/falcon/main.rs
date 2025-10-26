@@ -1,6 +1,5 @@
 // TODO: Add an offline mode.
 
-
 use anyhow::{Error as E, Result};
 use candle::{DType, Device, Tensor};
 use candle_nn::VarBuilder;

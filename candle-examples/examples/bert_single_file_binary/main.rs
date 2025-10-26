@@ -1,4 +1,3 @@
-
 use candle_transformers::models::bert::{BertModel, Config as BertConfig, DTYPE};
 
 use anyhow::{Error as E, Result};

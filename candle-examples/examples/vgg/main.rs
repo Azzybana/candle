@@ -1,4 +1,3 @@
-
 use candle::{D, DType, IndexOp};
 use candle_nn::{ModuleT, VarBuilder};
 use candle_transformers::models::vgg::{Models, Vgg};

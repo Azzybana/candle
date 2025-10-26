@@ -1,4 +1,3 @@
-
 use anyhow::{Error as E, Result};
 use candle::{Device, IndexOp, Tensor};
 use candle_nn::{VarBuilder, ops::softmax};

@@ -1,9 +1,8 @@
-
 use anyhow::Error as E;
 use clap::Parser;
 
 use candle::{DType, Device, Tensor};
-use candle_nn::{ops::softmax, VarBuilder};
+use candle_nn::{VarBuilder, ops::softmax};
 use candle_transformers::models::clip;
 
 use tokenizers::Tokenizer;

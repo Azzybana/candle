@@ -1,8 +1,8 @@
 use crate::models::{
     qwen3::{Config as Qwen3Config, Qwen3Attention, Qwen3MLP, Qwen3RotaryEmbedding},
-    with_tracing::{linear_no_bias, Linear, RmsNorm},
+    with_tracing::{Linear, RmsNorm, linear_no_bias},
 };
-use candle::{DType, Device, Module, Result, Tensor, D};
+use candle::{D, DType, Device, Module, Result, Tensor};
 use candle_nn::{Activation, VarBuilder};
 use std::sync::Arc;
 
@@ -296,11 +296,7 @@ impl Model {
                         Some(w) => (i + offset) as i64 - j as i64 <= w as i64,
                         None => true,
                     };
-                    if past_ok && sw_ok {
-                        0.
-                    } else {
-                        minf
-                    }
+                    if past_ok && sw_ok { 0. } else { minf }
                 })
             })
             .collect();

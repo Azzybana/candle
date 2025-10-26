@@ -1,1 +1,1 @@
-    let dtype = DType::F32;
+const DTYPE: DType = DType::F32;

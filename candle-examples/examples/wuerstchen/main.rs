@@ -1,4 +1,3 @@
-
 use candle_transformers::models::stable_diffusion;
 use candle_transformers::models::wuerstchen;
 

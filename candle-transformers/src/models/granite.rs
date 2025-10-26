@@ -3,9 +3,9 @@
 //! A high performance transformer model optimized for efficient processing
 //! of very long context sequences
 
-use super::with_tracing::{linear_no_bias as linear, Linear, RmsNorm};
-use candle::{DType, Device, IndexOp, Result, Tensor, D};
-use candle_nn::{embedding, Embedding, Module, VarBuilder};
+use super::with_tracing::{Linear, RmsNorm, linear_no_bias as linear};
+use candle::{D, DType, Device, IndexOp, Result, Tensor};
+use candle_nn::{Embedding, Module, VarBuilder, embedding};
 use std::{collections::HashMap, f32::consts::PI};
 
 pub const DEFAULT_MAX_SEQ_LEN: usize = 4096;

@@ -3,7 +3,6 @@
 // - Batch size greater than 1.
 // - More token filters (SuppressBlanks, ApplyTimestampRules).
 
-
 use anyhow::{Error as E, Result};
 use candle::{Device, IndexOp, Tensor};
 use candle_nn::{

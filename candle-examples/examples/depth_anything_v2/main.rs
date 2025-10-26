@@ -1,7 +1,6 @@
 //! Depth Anything V2
 //! https://huggingface.co/spaces/depth-anything/Depth-Anything-V2
 
-
 use clap::Parser;
 use std::{ffi::OsString, path::PathBuf, sync::Arc};
 

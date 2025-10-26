@@ -1,6 +1,6 @@
 use crate::benchmarks::{BenchDevice, BenchDeviceHandler};
 use candle_core::{DType, Device, Tensor};
-use criterion::{criterion_group, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group};
 use half::{bf16, f16};
 use std::hint::black_box;
 use std::time::Instant;

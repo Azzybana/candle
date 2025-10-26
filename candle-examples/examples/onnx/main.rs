@@ -1,4 +1,3 @@
-
 use candle::{D, IndexOp};
 use candle_examples::save_image;
 use clap::{Parser, ValueEnum};

@@ -1,4 +1,3 @@
-
 use candle_transformers::object_detection::{Bbox, non_maximum_suppression};
 mod darknet;
 

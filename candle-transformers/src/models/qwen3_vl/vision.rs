@@ -1,9 +1,9 @@
 use std::f64;
 
-use candle::{DType, Device, IndexOp, Result, Tensor, D};
+use candle::{D, DType, Device, IndexOp, Result, Tensor};
 use candle_nn::{
-    embedding, layer_norm, linear, Activation, Embedding, LayerNorm, LayerNormConfig, Linear,
-    Module, VarBuilder,
+    Activation, Embedding, LayerNorm, LayerNormConfig, Linear, Module, VarBuilder, embedding,
+    layer_norm, linear,
 };
 
 use crate::models::qwen3_vl::conv3d_temporal_2::{Conv3dConfig, Conv3dNoBias};

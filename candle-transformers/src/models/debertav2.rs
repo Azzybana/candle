@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use candle::{bail, Context, DType, Device, Module, Result, Tensor, D};
+use candle::{Context, D, DType, Device, Module, Result, Tensor, bail};
 use candle_nn::{
-    conv1d, embedding, layer_norm, Conv1d, Conv1dConfig, Embedding, LayerNorm, VarBuilder,
+    Conv1d, Conv1dConfig, Embedding, LayerNorm, VarBuilder, conv1d, embedding, layer_norm,
 };
 use serde::{Deserialize, Deserializer};
 
@@ -451,20 +451,21 @@ impl DebertaV2DisentangledSelfAttention {
         };
 
         if self.relative_attention
-            && let Some(rel_embeddings) = rel_embeddings {
-                let rel_embeddings = self
-                    .pos_dropout
-                    .as_ref()
-                    .context("relative_attention requires pos_dropout")?
-                    .forward(rel_embeddings)?;
-                rel_att = Some(self.disentangled_attention_bias(
-                    query_layer,
-                    key_layer,
-                    relative_pos,
-                    rel_embeddings,
-                    scale_factor,
-                )?);
-            }
+            && let Some(rel_embeddings) = rel_embeddings
+        {
+            let rel_embeddings = self
+                .pos_dropout
+                .as_ref()
+                .context("relative_attention requires pos_dropout")?
+                .forward(rel_embeddings)?;
+            rel_att = Some(self.disentangled_attention_bias(
+                query_layer,
+                key_layer,
+                relative_pos,
+                rel_embeddings,
+                scale_factor,
+            )?);
+        }
 
         if let Some(rel_att) = rel_att {
             attention_scores = attention_scores.broadcast_add(&rel_att)?;
@@ -1045,9 +1046,10 @@ impl DebertaV2Encoder {
             )?;
 
             if i == 0
-                && let Some(conv) = &self.conv {
-                    output_states = conv.forward(hidden_states, &output_states, &input_mask)?;
-                }
+                && let Some(conv) = &self.conv
+            {
+                output_states = conv.forward(hidden_states, &output_states, &input_mask)?;
+            }
 
             if query_states.is_some() {
                 query_states = Some(output_states.clone());
@@ -1184,7 +1186,9 @@ impl DebertaV2Model {
                 .forward(&embedding_output, &attention_mask, None, None)?;
 
         if self.z_steps > 1 {
-            todo!("Complete DebertaV2Model forward() when z_steps > 1 -- Needs a model to test this situation.")
+            todo!(
+                "Complete DebertaV2Model forward() when z_steps > 1 -- Needs a model to test this situation."
+            )
         }
 
         Ok(encoder_output)
@@ -1216,15 +1220,19 @@ pub struct DebertaV2NERModel {
 
 fn id2label_len(config: &Config, id2label: Option<HashMap<u32, String>>) -> Result<usize> {
     let id2label_len = match (&config.id2label, id2label) {
-        (None, None) => bail!("Id2Label is either not present in the model configuration or not passed into DebertaV2NERModel::load as a parameter"),
+        (None, None) => bail!(
+            "Id2Label is either not present in the model configuration or not passed into DebertaV2NERModel::load as a parameter"
+        ),
         (None, Some(id2label_p)) => id2label_p.len(),
         (Some(id2label_c), None) => id2label_c.len(),
         (Some(id2label_c), Some(id2label_p)) => {
-          if *id2label_c == id2label_p {
-            id2label_c.len()
-          } else {
-            bail!("Id2Label is both present in the model configuration and provided as a parameter, and they are different.")
-          }
+            if *id2label_c == id2label_p {
+                id2label_c.len()
+            } else {
+                bail!(
+                    "Id2Label is both present in the model configuration and provided as a parameter, and they are different."
+                )
+            }
         }
     };
     Ok(id2label_len)

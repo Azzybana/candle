@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use hf_hub::{api::sync::Api, Repo, RepoType};
+use hf_hub::{Repo, RepoType, api::sync::Api};
 use std::{
     fs::{self, File},
     io::copy,

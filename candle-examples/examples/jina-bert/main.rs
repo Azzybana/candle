@@ -1,4 +1,3 @@
-
 use candle_transformers::models::jina_bert::{BertModel, Config, PositionEmbeddingType};
 
 use anyhow::Error as E;

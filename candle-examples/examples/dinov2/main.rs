@@ -1,10 +1,9 @@
 //! DINOv2: Learning Robust Visual Features without Supervision
 //! https://github.com/facebookresearch/dinov2
 
-
 use clap::Parser;
 
-use candle::{DType, IndexOp, D};
+use candle::{D, DType, IndexOp};
 use candle_nn::{Module, VarBuilder};
 use candle_transformers::models::dinov2;
 

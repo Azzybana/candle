@@ -16,8 +16,8 @@
 //! - [Model Card](https://huggingface.co/Qwen/Qwen2-7B-beta)
 //!
 
-use crate::models::with_tracing::{linear, linear_no_bias, Linear, RmsNorm};
-use candle::{DType, Device, Module, Result, Tensor, D};
+use crate::models::with_tracing::{Linear, RmsNorm, linear, linear_no_bias};
+use candle::{D, DType, Device, Module, Result, Tensor};
 use candle_nn::{Activation, VarBuilder};
 use std::sync::Arc;
 

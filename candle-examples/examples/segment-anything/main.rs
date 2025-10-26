@@ -1,7 +1,6 @@
 //! SAM: Segment Anything Model
 //! https://github.com/facebookresearch/segment-anything
 
-
 use candle::DType;
 use candle_nn::VarBuilder;
 use candle_transformers::models::segment_anything::sam;

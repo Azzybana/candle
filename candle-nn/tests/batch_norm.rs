@@ -1,4 +1,3 @@
-
 use anyhow::Result;
 use candle::{DType, Device, Tensor, test_utils};
 use candle_nn::{BatchNorm, BatchNormConfig, VarBuilder, VarMap, batch_norm};

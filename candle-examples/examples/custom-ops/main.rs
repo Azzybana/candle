@@ -3,7 +3,6 @@
 //
 // In this example we add the RMS normalization operation and implement it for f32.
 
-
 use clap::Parser;
 
 use candle::{CpuStorage, CustomOp1, Layout, Result, Shape, Tensor};

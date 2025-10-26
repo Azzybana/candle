@@ -6,7 +6,6 @@
 // The tokenizer config can be retrieved from:
 // https://huggingface.co/hf-internal-testing/llama-tokenizer/raw/main/tokenizer.json
 
-
 use anyhow::{Error as E, Result, bail};
 use clap::{Parser, ValueEnum};
 

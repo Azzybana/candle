@@ -23,7 +23,7 @@ cov = "llvm-cov nextest --config .cargo/nextest.toml"
 lcov = "llvm-cov nextest --lcov --output-path lcov.info --config .cargo/nextest.toml"
 flame = "flamegraph --profile=release-with-debug"
 clear = ["clean", "cache -a"]
-fmt = "fmt -- --config version=2024,style_version=2024"
+f = "fmt -- --config edition=2024,style_edition=2024"
 fixes = ["clippy --fix --allow-dirty", "fmt"]
 doc = "doc --no-deps"
 mir = "miri test"

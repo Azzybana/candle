@@ -15,20 +15,18 @@
 //! - [Model Card](https://huggingface.co/dunzhang/stella_en_1.5B_v5)
 //!
 
-use crate::models::with_tracing::{linear, linear_no_bias, Linear, RmsNorm};
-use candle::{DType, Device, Error, IndexOp, Module, Result, Tensor, D};
-use candle_nn::{layer_norm, Activation, LayerNorm, VarBuilder};
+use crate::models::with_tracing::{Linear, RmsNorm, linear, linear_no_bias};
+use candle::{D, DType, Device, Error, IndexOp, Module, Result, Tensor};
+use candle_nn::{Activation, LayerNorm, VarBuilder, layer_norm};
 use std::sync::Arc;
 
 // internal representation for identifying which model is being used
-#[derive(Debug, Copy, Clone, PartialEq, serde::Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Copy, Clone, PartialEq, serde::Deserialize, Default)]
 pub enum ModelVariant {
     #[default]
     Large, // 1.5B
     Small, // 400M
 }
-
 
 // Same as `qwen2` family of models with the exception being the `embed_head`
 // The final `output` causal modelling head is swapped with a learned `dense` layer, `embed_head`
@@ -63,8 +61,7 @@ pub struct EmbedHead {
 
 /// An enum variant representing the Embedding head dimensions `stella` is trained on
 /// As the [model-card](https://huggingface.co/dunzhang/stella_en_1.5B_v5#introduction) suggests, D1024 is good enough for most cases
-#[derive(Debug, Clone, Copy)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub enum EmbedDim {
     Dim256,
     Dim768,
@@ -75,7 +72,6 @@ pub enum EmbedDim {
     Dim6144,
     Dim8192,
 }
-
 
 impl EmbedDim {
     pub fn config(&self, in_features: usize) -> EmbedHead {
