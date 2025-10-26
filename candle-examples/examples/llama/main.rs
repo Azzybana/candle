@@ -167,6 +167,7 @@ fn main() -> Result<()> {
         let tokenizer_filename = api.get("tokenizer.json")?;
         let config_filename = api.get("config.json")?;
         let config: LlamaConfig = serde_json::from_slice(&std::fs::read(config_filename)?)?;
+        let config = config.into_config();
 
         let filenames = match args.which {
             Which::V1
