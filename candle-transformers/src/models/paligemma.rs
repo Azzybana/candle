@@ -112,7 +112,7 @@ impl Model {
             vb.pp("vision_tower.vision_model"),
         )?;
         let multi_modal_projector = MultiModalProjector::new(cfg, vb.pp("multi_modal_projector"))?;
-        let language_model = gemma::Model::new(false, &cfg.text_config, vb.pp("language_model"))?;
+        let language_model = gemma::Model::new(&cfg.text_config, vb.pp("language_model"))?;
         Ok(Self {
             pos: 0,
             language_model,

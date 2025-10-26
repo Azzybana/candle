@@ -114,7 +114,6 @@ pub struct StreamingMultiheadAttention {
     rope: Option<Arc<RotaryEmbedding>>,
     kv_cache: candle_nn::kv_cache::RotatingKvCache,
     pos: usize,
-    use_flash_attn: bool,
     span: tracing::Span,
 }
 
@@ -140,7 +139,6 @@ impl StreamingMultiheadAttention {
             neg_inf,
             kv_cache: candle_nn::kv_cache::RotatingKvCache::new(2, cfg.context),
             pos: 0,
-            use_flash_attn: false,
             span: tracing::span!(tracing::Level::TRACE, "mha"),
         })
     }
@@ -188,13 +186,7 @@ impl StreamingMultiheadAttention {
             (k.clone(), v.clone())
         };
 
-        let xs = if q.dtype() == DType::BF16 && self.use_flash_attn {
-            let q = q.transpose(1, 2)?;
-            let k = k.transpose(1, 2)?;
-            let v = v.transpose(1, 2)?;
-            let softmax_scale = 1f32 / (head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, softmax_scale, t > 1)?.transpose(1, 2)?
-        } else {
+        let xs = {
             let pre_ws = q.matmul(&k.t()?)?; // b,h,t,k
             let pre_ws = (pre_ws * (head_dim as f64).powf(-0.5))?;
 
@@ -759,5 +751,3 @@ impl StreamingModule for ProjectedTransformer {
         })
     }
 }
-
-

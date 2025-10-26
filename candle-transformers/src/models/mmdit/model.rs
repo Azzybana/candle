@@ -206,7 +206,6 @@ impl MMDiTCore {
             context_qkv_only_joint_block: ContextQkvOnlyJointBlock::new(
                 hidden_size,
                 num_heads,
-                use_flash_attn,
                 vb.pp(format!("joint_blocks.{}", depth - 1)),
             )?,
             final_layer: FinalLayer::new(

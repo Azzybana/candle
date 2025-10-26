@@ -429,7 +429,6 @@ impl UNetMidBlock2DCrossAttn {
                 in_channels,
                 n_heads,
                 in_channels / n_heads,
-                use_flash_attn,
                 attn_cfg,
             )?;
             let resnet = ResnetBlock2D::new(
@@ -623,7 +622,6 @@ impl CrossAttnDownBlock2D {
                     out_channels,
                     n_heads,
                     out_channels / n_heads,
-                    use_flash_attn,
                     cfg,
                 )
             })
@@ -830,7 +828,6 @@ impl CrossAttnUpBlock2D {
                     out_channels,
                     n_heads,
                     out_channels / n_heads,
-                    use_flash_attn,
                     cfg,
                 )
             })

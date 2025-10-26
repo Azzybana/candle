@@ -391,23 +391,16 @@ pub struct ContextQkvOnlyJointBlock {
     x_block: DiTBlock,
     context_block: QkvOnlyDiTBlock,
     num_heads: usize,
-    use_flash_attn: bool,
 }
 
 impl ContextQkvOnlyJointBlock {
-    pub fn new(
-        hidden_size: usize,
-        num_heads: usize,
-        use_flash_attn: bool,
-        vb: nn::VarBuilder,
-    ) -> Result<Self> {
+    pub fn new(hidden_size: usize, num_heads: usize, vb: nn::VarBuilder) -> Result<Self> {
         let x_block = DiTBlock::new(hidden_size, num_heads, vb.pp("x_block"))?;
         let context_block = QkvOnlyDiTBlock::new(hidden_size, num_heads, vb.pp("context_block"))?;
         Ok(Self {
             x_block,
             context_block,
             num_heads,
-            use_flash_attn,
         })
     }
 
@@ -415,7 +408,7 @@ impl ContextQkvOnlyJointBlock {
         let context_qkv = self.context_block.pre_attention(context, c)?;
         let (x_qkv, x_interm) = self.x_block.pre_attention(x, c)?;
 
-        let (_, x_attn) = joint_attn(&context_qkv, &x_qkv, self.num_heads, self.use_flash_attn)?;
+        let (_, x_attn) = joint_attn(&context_qkv, &x_qkv, self.num_heads)?;
 
         let x_out = self.x_block.post_attention(&x_attn, x, &x_interm)?;
         Ok(x_out)
@@ -440,12 +433,7 @@ fn flash_compatible_attention(
     attn_scores.reshape(q_dims_for_matmul)?.transpose(1, 2)
 }
 
-fn joint_attn(
-    context_qkv: &Qkv,
-    x_qkv: &Qkv,
-    num_heads: usize,
-    use_flash_attn: bool,
-) -> Result<(Tensor, Tensor)> {
+fn joint_attn(context_qkv: &Qkv, x_qkv: &Qkv, num_heads: usize) -> Result<(Tensor, Tensor)> {
     let qkv = Qkv {
         q: Tensor::cat(&[&context_qkv.q, &x_qkv.q], 1)?,
         k: Tensor::cat(&[&context_qkv.k, &x_qkv.k], 1)?,
@@ -453,7 +441,7 @@ fn joint_attn(
     };
 
     let seqlen = qkv.q.dim(1)?;
-    let attn = attn(&qkv, num_heads, use_flash_attn)?;
+    let attn = attn(&qkv, num_heads)?;
     let context_qkv_seqlen = context_qkv.q.dim(1)?;
     let context_attn = attn.narrow(1, 0, context_qkv_seqlen)?;
     let x_attn = attn.narrow(1, context_qkv_seqlen, seqlen - context_qkv_seqlen)?;
@@ -461,7 +449,7 @@ fn joint_attn(
     Ok((context_attn, x_attn))
 }
 
-fn attn(qkv: &Qkv, num_heads: usize, use_flash_attn: bool) -> Result<Tensor> {
+fn attn(qkv: &Qkv, num_heads: usize) -> Result<Tensor> {
     let batch_size = qkv.q.dim(0)?;
     let seqlen = qkv.q.dim(1)?;
     let qkv = Qkv {
@@ -472,10 +460,6 @@ fn attn(qkv: &Qkv, num_heads: usize, use_flash_attn: bool) -> Result<Tensor> {
 
     let headdim = qkv.q.dim(D::Minus1)?;
     let softmax_scale = 1.0 / (headdim as f64).sqrt();
-    let attn = if use_flash_attn {
-        flash_attn(&qkv.q, &qkv.k, &qkv.v, softmax_scale as f32, false)?
-    } else {
-        flash_compatible_attention(&qkv.q, &qkv.k, &qkv.v, softmax_scale as f32)?
-    };
+    let attn = flash_compatible_attention(&qkv.q, &qkv.k, &qkv.v, softmax_scale as f32)?;
     attn.reshape((batch_size, seqlen, ()))
 }

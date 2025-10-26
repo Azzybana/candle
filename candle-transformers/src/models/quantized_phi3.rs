@@ -84,7 +84,6 @@ struct LayerWeights {
     sin: Tensor,
     neg_inf: Tensor,
     kv_cache: KvCache,
-    use_flash_attn: bool,
     span_attn: tracing::Span,
     span_rot: tracing::Span,
 }
@@ -257,7 +256,6 @@ impl ModelWeights {
                 sin: sin.clone(),
                 neg_inf: neg_inf.clone(),
                 kv_cache,
-                use_flash_attn,
                 span_attn,
                 span_rot,
             })

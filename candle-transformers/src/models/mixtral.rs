@@ -127,7 +127,6 @@ struct Attention {
     hidden_size: usize,
     rotary_emb: Arc<RotaryEmbedding>,
     kv_cache: Option<(Tensor, Tensor)>,
-    use_flash_attn: bool,
 }
 
 impl Attention {
@@ -153,7 +152,6 @@ impl Attention {
             hidden_size: hidden_sz,
             rotary_emb,
             kv_cache: None,
-            use_flash_attn: cfg.use_flash_attn,
         })
     }
 

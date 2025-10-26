@@ -32,7 +32,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn config_2b(use_flash_attn: bool) -> Self {
+    pub fn config_2b() -> Self {
         Self {
             attention_bias: false,
             bos_token_id: 1,
@@ -50,7 +50,6 @@ impl Config {
             rope_theta: 100000.0,
             tie_word_embeddings: false,
             vocab_size: 48000,
-            use_flash_attn,
         }
     }
 }
@@ -143,7 +142,6 @@ struct Attention {
     head_dim: usize,
     rotary_emb: Arc<RotaryEmbedding>,
     kv_cache: Option<(Tensor, Tensor)>,
-    use_flash_attn: bool,
 }
 
 impl Attention {
@@ -169,7 +167,6 @@ impl Attention {
             head_dim,
             rotary_emb,
             kv_cache: None,
-            use_flash_attn: cfg.use_flash_attn,
         })
     }
 

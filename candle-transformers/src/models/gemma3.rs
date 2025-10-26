@@ -291,12 +291,7 @@ struct DecoderLayer {
 }
 
 impl DecoderLayer {
-    fn new(
-        use_flash_attn: bool,
-        cfg: &Config,
-        vb: VarBuilder,
-        sliding_window: Option<usize>,
-    ) -> Result<Self> {
+    fn new(cfg: &Config, vb: VarBuilder, sliding_window: Option<usize>) -> Result<Self> {
         let rotary_emb = Arc::new(RotaryEmbedding::new(
             vb.dtype(),
             cfg,
@@ -406,7 +401,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(use_flash_attn: bool, cfg: &Config, vb: VarBuilder) -> Result<Self> {
+    pub fn new(cfg: &Config, vb: VarBuilder) -> Result<Self> {
         let vb_m = vb.pp("model");
         let embed_tokens =
             candle_nn::embedding(cfg.vocab_size, cfg.hidden_size, vb_m.pp("embed_tokens"))?;

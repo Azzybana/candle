@@ -156,12 +156,7 @@ struct Attention {
 }
 
 impl Attention {
-    fn new(
-        rotary_emb: Arc<RotaryEmbedding>,
-        use_flash_attn: bool,
-        cfg: &Config,
-        vb: VarBuilder,
-    ) -> Result<Self> {
+    fn new(rotary_emb: Arc<RotaryEmbedding>, cfg: &Config, vb: VarBuilder) -> Result<Self> {
         let hidden_sz = cfg.hidden_size;
         let num_heads = cfg.num_attention_heads;
         let num_kv_heads = cfg.num_key_value_heads;
@@ -265,12 +260,7 @@ struct DecoderLayer {
 }
 
 impl DecoderLayer {
-    fn new(
-        rotary_emb: Arc<RotaryEmbedding>,
-        use_flash_attn: bool,
-        cfg: &Config,
-        vb: VarBuilder,
-    ) -> Result<Self> {
+    fn new(rotary_emb: Arc<RotaryEmbedding>, cfg: &Config, vb: VarBuilder) -> Result<Self> {
         let self_attn = Attention::new(rotary_emb, cfg, vb.pp("self_attn"))?;
         let mlp = MLP::new(cfg, vb.pp("mlp"))?;
         let input_layernorm =
@@ -337,7 +327,7 @@ pub struct Model {
 }
 
 impl Model {
-    pub fn new(use_flash_attn: bool, cfg: &Config, vb: VarBuilder) -> Result<Self> {
+    pub fn new(cfg: &Config, vb: VarBuilder) -> Result<Self> {
         let vb_m = vb.pp("model");
         let embed_tokens =
             candle_nn::embedding(cfg.vocab_size, cfg.hidden_size, vb_m.pp("embed_tokens"))?;
