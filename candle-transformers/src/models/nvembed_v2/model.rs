@@ -167,7 +167,7 @@ pub struct Model {
 impl Model {
     pub fn new(vb: VarBuilder) -> Result<Self> {
         // Embedding model
-        let cfg = Config::config_7b_v0_1(false);
+        let cfg = Config::config_7b_v0_1();
         let embedding_model = EmbeddingModel::new(&cfg, vb.pp("embedding_model"))?;
 
         // Latent attention

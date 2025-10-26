@@ -64,7 +64,7 @@ fn default_rope() -> f32 {
 }
 
 impl LlamaConfig {
-    pub fn into_config(self, use_flash_attn: bool) -> Config {
+    pub fn into_config(self) -> Config {
         Config {
             hidden_size: self.hidden_size,
             intermediate_size: self.intermediate_size,
@@ -74,7 +74,6 @@ impl LlamaConfig {
             num_key_value_heads: self.num_key_value_heads(),
             rms_norm_eps: self.rms_norm_eps,
             rope_theta: self.rope_theta,
-            use_flash_attn,
             bos_token_id: self.bos_token_id,
             eos_token_id: self.eos_token_id,
             rope_scaling: self.rope_scaling,
@@ -92,7 +91,6 @@ pub struct Config {
     pub num_hidden_layers: usize,
     pub num_attention_heads: usize,
     pub num_key_value_heads: usize,
-    pub use_flash_attn: bool,
     pub rms_norm_eps: f64,
     pub rope_theta: f32,
     pub bos_token_id: Option<u32>,
@@ -103,7 +101,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn config_7b_v1(use_flash_attn: bool) -> Self {
+    pub fn config_7b_v1() -> Self {
         Self {
             hidden_size: 4096,
             intermediate_size: 11008,
@@ -111,7 +109,6 @@ impl Config {
             num_hidden_layers: 32,
             num_attention_heads: 32,
             num_key_value_heads: 32,
-            use_flash_attn,
             rms_norm_eps: 1e-6,
             rope_theta: 10_000.0,
             bos_token_id: None,
@@ -122,7 +119,7 @@ impl Config {
         }
     }
 
-    pub fn config_7b_v2(use_flash_attn: bool) -> Self {
+    pub fn config_7b_v2() -> Self {
         Self {
             hidden_size: 4096,
             intermediate_size: 11008,
@@ -130,7 +127,6 @@ impl Config {
             num_hidden_layers: 32,
             num_attention_heads: 32,
             num_key_value_heads: 32,
-            use_flash_attn,
             rms_norm_eps: 1e-5,
             rope_theta: 10_000.0,
             bos_token_id: None,
@@ -238,26 +234,9 @@ struct CausalSelfAttention {
     num_attention_heads: usize,
     num_key_value_heads: usize,
     head_dim: usize,
-    use_flash_attn: bool,
     span: tracing::Span,
     span_rot: tracing::Span,
     max_position_embeddings: usize,
-}
-
-#[cfg(feature = "flash-attn")]
-fn flash_attn(
-    q: &Tensor,
-    k: &Tensor,
-    v: &Tensor,
-    softmax_scale: f32,
-    causal: bool,
-) -> Result<Tensor> {
-    candle_flash_attn::flash_attn(q, k, v, softmax_scale, causal)
-}
-
-#[cfg(not(feature = "flash-attn"))]
-fn flash_attn(_: &Tensor, _: &Tensor, _: &Tensor, _: f32, _: bool) -> Result<Tensor> {
-    unimplemented!("compile with '--features flash-attn'")
 }
 
 impl CausalSelfAttention {
@@ -328,14 +307,7 @@ impl CausalSelfAttention {
         let k = self.repeat_kv(k)?;
         let v = self.repeat_kv(v)?;
 
-        let y = if self.use_flash_attn {
-            // flash-attn expects (b_sz, seq_len, nheads, head_dim)
-            let q = q.transpose(1, 2)?;
-            let k = k.transpose(1, 2)?;
-            let v = v.transpose(1, 2)?;
-            let softmax_scale = 1f32 / (self.head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, softmax_scale, seq_len > 1)?.transpose(1, 2)?
-        } else {
+        let y = {
             let in_dtype = q.dtype();
             let q = q.to_dtype(DType::F32)?;
             let k = k.to_dtype(DType::F32)?;
@@ -379,7 +351,6 @@ impl CausalSelfAttention {
             num_attention_heads: cfg.num_attention_heads,
             num_key_value_heads: cfg.num_key_value_heads,
             head_dim: cfg.hidden_size / cfg.num_attention_heads,
-            use_flash_attn: cfg.use_flash_attn,
             span,
             span_rot,
             max_position_embeddings: cfg.max_position_embeddings,

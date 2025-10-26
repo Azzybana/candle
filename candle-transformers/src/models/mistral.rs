@@ -15,10 +15,6 @@ fn default_num_attention_heads() -> usize {
     32
 }
 
-fn default_use_flash_attn() -> bool {
-    false
-}
-
 fn default_hidden_act() -> candle_nn::Activation {
     candle_nn::Activation::Silu
 }
@@ -39,13 +35,11 @@ pub struct Config {
     pub rms_norm_eps: f64,
     pub rope_theta: f64,
     pub sliding_window: Option<usize>,
-    #[serde(default = "default_use_flash_attn")]
-    pub use_flash_attn: bool,
 }
 
 impl Config {
     // https://huggingface.co/mistralai/Mistral-7B-v0.1/blob/main/config.json
-    pub fn config_7b_v0_1(use_flash_attn: bool) -> Self {
+    pub fn config_7b_v0_1() -> Self {
         Self {
             vocab_size: 32000,
             hidden_size: 4096,
@@ -59,13 +53,12 @@ impl Config {
             rms_norm_eps: 1e-5,
             rope_theta: 10_000.,
             sliding_window: Some(4096),
-            use_flash_attn,
         }
     }
 
     // https://huggingface.co/Open-Orca/Mistral-7B-OpenOrca/blob/main/config.json
     // https://huggingface.co/teknium/OpenHermes-2.5-Mistral-7B/blob/main/config.json
-    pub fn config_chat_ml(use_flash_attn: bool) -> Self {
+    pub fn config_chat_ml() -> Self {
         Self {
             vocab_size: 32002,
             hidden_size: 4096,
@@ -79,12 +72,11 @@ impl Config {
             rms_norm_eps: 1e-5,
             rope_theta: 10_000.,
             sliding_window: Some(4096),
-            use_flash_attn,
         }
     }
 
     // https://huggingface.co/amazon/MistralLite/blob/main/config.json
-    pub fn config_amazon_mistral_lite(use_flash_attn: bool) -> Self {
+    pub fn config_amazon_mistral_lite() -> Self {
         Self {
             vocab_size: 32003,
             hidden_size: 4096,
@@ -98,7 +90,6 @@ impl Config {
             rms_norm_eps: 1e-5,
             rope_theta: 10_000.,
             sliding_window: Some(4096),
-            use_flash_attn,
         }
     }
 
@@ -183,22 +174,6 @@ impl Module for MLP {
     }
 }
 
-#[cfg(feature = "flash-attn")]
-fn flash_attn(
-    q: &Tensor,
-    k: &Tensor,
-    v: &Tensor,
-    softmax_scale: f32,
-    causal: bool,
-) -> Result<Tensor> {
-    candle_flash_attn::flash_attn(q, k, v, softmax_scale, causal)
-}
-
-#[cfg(not(feature = "flash-attn"))]
-fn flash_attn(_: &Tensor, _: &Tensor, _: &Tensor, _: f32, _: bool) -> Result<Tensor> {
-    unimplemented!("compile with '--features flash-attn'")
-}
-
 #[derive(Debug, Clone)]
 struct Attention {
     q_proj: Linear,
@@ -211,7 +186,6 @@ struct Attention {
     head_dim: usize,
     rotary_emb: Arc<RotaryEmbedding>,
     kv_cache: Option<(Tensor, Tensor)>,
-    use_flash_attn: bool,
 }
 
 impl Attention {
@@ -236,7 +210,6 @@ impl Attention {
             head_dim,
             rotary_emb,
             kv_cache: None,
-            use_flash_attn: cfg.use_flash_attn,
         })
     }
 
@@ -282,14 +255,7 @@ impl Attention {
         let key_states = crate::utils::repeat_kv(key_states, self.num_kv_groups)?;
         let value_states = crate::utils::repeat_kv(value_states, self.num_kv_groups)?;
 
-        let attn_output = if self.use_flash_attn {
-            // flash-attn expects (b_sz, seq_len, nheads, head_dim)
-            let q = query_states.transpose(1, 2)?;
-            let k = key_states.transpose(1, 2)?;
-            let v = value_states.transpose(1, 2)?;
-            let softmax_scale = 1f32 / (self.head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, softmax_scale, q_len > 1)?.transpose(1, 2)?
-        } else {
+        let attn_output = {
             let scale = 1f64 / f64::sqrt(self.head_dim as f64);
             let attn_weights = (query_states.matmul(&key_states.transpose(2, 3)?)? * scale)?;
 
