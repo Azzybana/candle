@@ -67,9 +67,6 @@ struct Args {
 
     #[arg(long, default_value = "tara")]
     voice: Voice,
-
-    #[arg(long)]
-    use_flash_attn: bool,
 }
 
 #[derive(Clone, Debug, Copy, PartialEq, Eq, clap::ValueEnum)]
@@ -206,7 +203,6 @@ impl Model {
         let dtype = device.bf16_default_to_f32();
         let vb = unsafe { VarBuilder::from_mmaped_safetensors(&model_files, dtype, &device)? };
         let config: LlamaConfig = serde_json::from_reader(std::fs::File::open(config)?)?;
-        let config = config.into_config(args.use_flash_attn);
         let model = Llama::load(vb, &config)?;
         let logits_processor = {
             use candle_transformers::generation::{LogitsProcessor, Sampling};

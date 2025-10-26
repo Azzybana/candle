@@ -85,9 +85,6 @@ struct Args {
     intermediary_images: bool,
 
     #[arg(long)]
-    use_flash_attn: bool,
-
-    #[arg(long)]
     use_f16: bool,
 
     #[arg(long)]
@@ -546,7 +543,6 @@ fn run(args: Args) -> Result<()> {
         tracing,
         use_f16,
         guidance_scale,
-        use_flash_attn,
         mask_path,
         img2img,
         img2img_strength,
@@ -669,7 +665,7 @@ fn run(args: Args) -> Result<()> {
         | StableDiffusionVersion::V1_5Inpaint => 9,
         _ => 4,
     };
-    let unet = sd_config.build_unet(unet_weights, &device, in_channels, use_flash_attn, dtype)?;
+    let unet = sd_config.build_unet(unet_weights, &device, in_channels, dtype)?;
 
     let t_start = if img2img.is_some() {
         n_steps - (n_steps as f64 * img2img_strength) as usize

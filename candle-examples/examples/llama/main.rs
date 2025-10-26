@@ -104,9 +104,6 @@ struct Args {
     #[arg(long, default_value = "v3")]
     which: Which,
 
-    #[arg(long)]
-    use_flash_attn: bool,
-
     /// Penalty to be applied for repeating tokens, 1. means no penalty.
     #[arg(long, default_value_t = 1.1)]
     repeat_penalty: f32,
@@ -170,7 +167,6 @@ fn main() -> Result<()> {
         let tokenizer_filename = api.get("tokenizer.json")?;
         let config_filename = api.get("config.json")?;
         let config: LlamaConfig = serde_json::from_slice(&std::fs::read(config_filename)?)?;
-        let config = config.into_config(args.use_flash_attn);
 
         let filenames = match args.which {
             Which::V1

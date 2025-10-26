@@ -229,9 +229,6 @@ struct Args {
     tracing: bool,
 
     #[arg(long)]
-    use_flash_attn: bool,
-
-    #[arg(long)]
     query: Option<String>,
 
     #[arg(long, default_value = "1024")]

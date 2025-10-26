@@ -33,9 +33,6 @@ struct Args {
     #[arg(long)]
     tracing: bool,
 
-    #[arg(long)]
-    use_flash_attn: bool,
-
     /// The height in pixels of the generated image.
     #[arg(long)]
     height: Option<usize>,

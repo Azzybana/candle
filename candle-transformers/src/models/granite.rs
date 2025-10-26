@@ -62,7 +62,7 @@ fn default_rope() -> f32 {
 }
 
 impl GraniteConfig {
-    pub fn into_config(self, use_flash_attn: bool) -> Config {
+    pub fn into_config(self) -> Config {
         Config {
             hidden_size: self.hidden_size,
             intermediate_size: self.intermediate_size,
@@ -72,7 +72,6 @@ impl GraniteConfig {
             num_key_value_heads: self.num_key_value_heads(),
             rms_norm_eps: self.rms_norm_eps,
             rope_theta: self.rope_theta,
-            use_flash_attn,
             bos_token_id: self.bos_token_id,
             eos_token_id: self.eos_token_id,
             rope_scaling: self.rope_scaling,
@@ -89,7 +88,6 @@ pub struct Config {
     pub num_hidden_layers: usize,
     pub num_attention_heads: usize,
     pub num_key_value_heads: usize,
-    pub use_flash_attn: bool,
     pub rms_norm_eps: f64,
     pub rope_theta: f32,
     pub bos_token_id: Option<u32>,

@@ -81,7 +81,7 @@ pub enum GraniteMoeHybridLayerType {
 }
 
 impl GraniteMoeHybridConfig {
-    pub fn into_config(self, use_flash_attn: bool) -> GraniteMoeHybridInternalConfig {
+    pub fn into_config(self) -> GraniteMoeHybridInternalConfig {
         let layer_types = if self.layer_types.is_empty() {
             vec![GraniteMoeHybridLayerType::Attention; self.num_hidden_layers]
         } else {
@@ -98,7 +98,6 @@ impl GraniteMoeHybridConfig {
             num_hidden_layers: self.num_hidden_layers,
             num_attention_heads: self.num_attention_heads,
             num_key_value_heads: self.num_key_value_heads(),
-            use_flash_attn,
             rms_norm_eps: self.rms_norm_eps,
             rope_theta: self.rope_theta,
             bos_token_id: self.bos_token_id,
@@ -123,7 +122,6 @@ pub struct GraniteMoeHybridInternalConfig {
     pub num_hidden_layers: usize,
     pub num_attention_heads: usize,
     pub num_key_value_heads: usize,
-    pub use_flash_attn: bool,
     pub rms_norm_eps: f64,
     pub rope_theta: f32,
     pub bos_token_id: Option<u32>,

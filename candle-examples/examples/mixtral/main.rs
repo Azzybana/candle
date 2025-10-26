@@ -119,9 +119,6 @@ struct Args {
     tracing: bool,
 
     #[arg(long)]
-    use_flash_attn: bool,
-
-    #[arg(long)]
     prompt: String,
 
     /// The temperature used to generate samples.
@@ -209,7 +206,7 @@ fn main() -> Result<()> {
     let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
 
     let start = std::time::Instant::now();
-    let config = Config::v0_1_8x7b(args.use_flash_attn);
+    let config = Config::v0_1_8x7b();
     let device = candle_examples::device(args.cpu)?;
     let dtype = device.bf16_default_to_f32();
     let vb = unsafe { VarBuilder::from_mmaped_safetensors(&filenames, dtype, &device)? };

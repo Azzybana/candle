@@ -105,7 +105,6 @@ impl UNet2DConditionModel {
         vs: nn::VarBuilder,
         in_channels: usize,
         out_channels: usize,
-        use_flash_attn: bool,
         config: UNet2DConditionModelConfig,
     ) -> Result<Self> {
         let n_blocks = config.blocks.len();
@@ -165,7 +164,6 @@ impl UNet2DConditionModel {
                         in_channels,
                         out_channels,
                         Some(time_embed_dim),
-                        use_flash_attn,
                         config,
                     )?;
                     Ok(UNetDownBlock::CrossAttn(block))
@@ -202,7 +200,6 @@ impl UNet2DConditionModel {
             vs.pp("mid_block"),
             bl_channels,
             Some(time_embed_dim),
-            use_flash_attn,
             mid_cfg,
         )?;
 
@@ -256,7 +253,6 @@ impl UNet2DConditionModel {
                         prev_out_channels,
                         out_channels,
                         Some(time_embed_dim),
-                        use_flash_attn,
                         config,
                     )?;
                     Ok(UNetUpBlock::CrossAttn(block))

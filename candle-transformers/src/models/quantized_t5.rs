@@ -358,7 +358,6 @@ impl T5Attention {
         };
         let k = k.contiguous()?;
         let v = v.contiguous()?;
-        // TODO: Use flash_attn.
         let scores = {
             let _enter = self.span_mm.enter();
             q.matmul(&k.t()?)?

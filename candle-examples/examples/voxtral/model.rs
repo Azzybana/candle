@@ -384,7 +384,6 @@ fn parse_text_config(json: &serde_json::Value) -> Result<LlamaConfig> {
             .get("max_position_embeddings")
             .and_then(|v| v.as_u64())
             .unwrap_or(131072) as usize,
-        use_flash_attn: false,
         tie_word_embeddings: text_json
             .get("attention_bias")
             .and_then(|v| v.as_bool())
