@@ -18,8 +18,8 @@ crate-type = ["rlib"]
 
 [dependencies]
 byteorder = { workspace = true }
-candle = { workspace = true }
-candle-nn = { workspace = true }
+candle = { path = "../candle-core", package = "candle-core" }
+candle-nn = { path = "../candle-nn" }
 fancy-regex = { workspace = true }
 num-traits = { workspace = true }
 rand = { workspace = true }

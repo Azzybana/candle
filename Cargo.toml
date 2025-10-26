@@ -27,11 +27,6 @@ license-file = "LICENSE-APACHE"
 [workspace.dependencies]
 anyhow = "1.*"
 byteorder = "1.*"
-candle = { path = "./candle-core", package = "candle-core" }
-candle-datasets = { path = "./candle-datasets" }
-candle-nn = { path = "./candle-nn" }
-candle-onnx = { path = "./candle-onnx" }
-candle-transformers = { path = "./candle-transformers" }
 clap = { version = "4.*", features = ["derive"] }
 cpal = "0.*"
 criterion = { version = "0.*", default-features = false }

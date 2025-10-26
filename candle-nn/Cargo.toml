@@ -15,7 +15,7 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [dependencies]
-candle = { workspace = true }
+candle = { path = "../candle-core", package = "candle-core" }
 half = { workspace = true }
 thiserror = { workspace = true }
 num-traits = { workspace = true }

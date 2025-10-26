@@ -10,11 +10,11 @@ license.workspace = true
 readme = "README.md"
 
 [dependencies]
-candle = { workspace = true }
-candle-datasets = { workspace = true, optional = true }
-candle-nn = { workspace = true }
-candle-transformers = { workspace = true }
-candle-onnx = { workspace = true, optional = true }
+candle = { path = "../candle-core", package = "candle-core" }
+candle-datasets = { path = "../candle-datasets", optional = true }
+candle-nn = { path = "../candle-nn" }
+candle-transformers = { path = "../candle-transformers" }
+candle-onnx = { path = "../candle-onnx", optional = true }
 
 csv = { workspace = true }
 half = { workspace = true, optional = true }
