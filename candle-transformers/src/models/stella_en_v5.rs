@@ -22,16 +22,13 @@ use std::sync::Arc;
 
 // internal representation for identifying which model is being used
 #[derive(Debug, Copy, Clone, PartialEq, serde::Deserialize)]
+#[derive(Default)]
 pub enum ModelVariant {
+    #[default]
     Large, // 1.5B
     Small, // 400M
 }
 
-impl Default for ModelVariant {
-    fn default() -> Self {
-        Self::Large
-    }
-}
 
 // Same as `qwen2` family of models with the exception being the `embed_head`
 // The final `output` causal modelling head is swapped with a learned `dense` layer, `embed_head`
@@ -67,9 +64,11 @@ pub struct EmbedHead {
 /// An enum variant representing the Embedding head dimensions `stella` is trained on
 /// As the [model-card](https://huggingface.co/dunzhang/stella_en_1.5B_v5#introduction) suggests, D1024 is good enough for most cases
 #[derive(Debug, Clone, Copy)]
+#[derive(Default)]
 pub enum EmbedDim {
     Dim256,
     Dim768,
+    #[default]
     Dim1024,
     Dim2048,
     Dim4096,
@@ -77,11 +76,6 @@ pub enum EmbedDim {
     Dim8192,
 }
 
-impl Default for EmbedDim {
-    fn default() -> Self {
-        Self::Dim1024
-    }
-}
 
 impl EmbedDim {
     pub fn config(&self, in_features: usize) -> EmbedHead {

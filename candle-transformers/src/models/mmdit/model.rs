@@ -227,11 +227,10 @@ impl MMDiTCore {
     ) -> Result<Tensor> {
         let (mut context, mut x) = (context.clone(), x.clone());
         for (i, joint_block) in self.joint_blocks.iter().enumerate() {
-            if let Some(skip_layers) = &skip_layers {
-                if skip_layers.contains(&i) {
+            if let Some(skip_layers) = &skip_layers
+                && skip_layers.contains(&i) {
                     continue;
                 }
-            }
             (context, x) = joint_block.forward(&context, &x, c)?;
         }
         let x = self.context_qkv_only_joint_block.forward(&context, &x, c)?;

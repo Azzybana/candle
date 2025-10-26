@@ -844,8 +844,8 @@ impl VoxtralForConditionalGeneration {
         let mut inputs_embeds = self.language_model.embed(input_ids)?;
 
         // If audio features are provided and not yet processed
-        if let Some(features) = input_features {
-            if !cache.audio_processed {
+        if let Some(features) = input_features
+            && !cache.audio_processed {
                 let audio_embeds = self.get_audio_embeds(features)?;
 
                 let audio_positions = find_audio_token_positions(input_ids, self.audio_token_id)?;
@@ -862,7 +862,6 @@ impl VoxtralForConditionalGeneration {
                     input_ids.device(),
                 )?;
             }
-        }
 
         // Forward through language model using forward_input_embed
         self.language_model
@@ -888,11 +887,10 @@ impl VoxtralForConditionalGeneration {
             );
         }
 
-        if let Some(p) = config.top_p {
-            if !(0.0..=1.0).contains(&p) {
+        if let Some(p) = config.top_p
+            && !(0.0..=1.0).contains(&p) {
                 candle::bail!("top_p must be between 0 and 1, got {}", p);
             }
-        }
 
         let mut final_cache = if let Some(cache) = config.cache {
             cache

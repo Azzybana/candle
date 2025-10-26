@@ -323,11 +323,9 @@ impl Qwen3VLTextModel {
             // Integrate DeepStack visual features when provided.
             if let (Some(visual_pos_masks), Some(deepstack)) =
                 (visual_pos_masks, deepstack_visual_embeds)
-            {
-                if i < deepstack.len() {
+                && i < deepstack.len() {
                     xs = self.deepstack_process(xs, visual_pos_masks, &deepstack[i])?;
                 }
-            }
         }
 
         xs = xs.apply(&self.norm)?;

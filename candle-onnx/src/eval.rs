@@ -464,16 +464,14 @@ fn simple_eval_(
                     None | Some("NOTSET") => (),
                     Some(s) => bail!("unsupported auto_pad {s}"),
                 };
-                if let Some(d) = dilations {
-                    if d.iter().any(|&v| v != 1) {
+                if let Some(d) = dilations
+                    && d.iter().any(|&v| v != 1) {
                         bail!("MaxPool with dilation != 1, {dilations:?}")
                     }
-                }
-                if let Some(d) = pads {
-                    if d.iter().any(|&v| v != 0) {
+                if let Some(d) = pads
+                    && d.iter().any(|&v| v != 0) {
                         bail!("MaxPool with pads != 0, {pads:?}")
                     }
-                }
                 let xs = get(&node.input[0])?;
                 let (k1, k2) = match kernel_shape {
                     [k1, k2] => (*k1 as usize, *k2 as usize),
@@ -499,16 +497,14 @@ fn simple_eval_(
                     None | Some("NOTSET") => (),
                     Some(s) => bail!("unsupported auto_pad {s}"),
                 };
-                if let Some(d) = dilations {
-                    if d.iter().any(|&v| v != 1) {
+                if let Some(d) = dilations
+                    && d.iter().any(|&v| v != 1) {
                         bail!("AvgPool with dilation != 1, {dilations:?}")
                     }
-                }
-                if let Some(d) = pads {
-                    if d.iter().any(|&v| v != 0) {
+                if let Some(d) = pads
+                    && d.iter().any(|&v| v != 0) {
                         bail!("AvgPool with pads != 0, {pads:?}")
                     }
-                }
                 let xs = get(&node.input[0])?;
                 let (k1, k2) = match kernel_shape {
                     [k1, k2] => (*k1 as usize, *k2 as usize),
@@ -1905,7 +1901,7 @@ fn simple_eval_(
                 )?;
 
                 let mut lstm_state = candle_nn::rnn::LSTMState::new(h, c);
-                let mut h_acc = if node.output.first().map(String::as_str).unwrap_or("") != "" {
+                let mut h_acc = if !node.output.first().map(String::as_str).unwrap_or("").is_empty() {
                     Some(vec![])
                 } else {
                     None
@@ -2181,7 +2177,7 @@ fn simple_eval_(
             }
             "HardSwish" => {
                 let input = get(&node.input[0])?;
-                let hard_sigmoid = candle_nn::ops::hard_sigmoid(&input)?;
+                let hard_sigmoid = candle_nn::ops::hard_sigmoid(input)?;
                 let output = input * hard_sigmoid;
                 values.insert(node.output[0].clone(), output?);
             }
@@ -2323,7 +2319,7 @@ fn simple_eval_(
                 let _updates_shape = updates.dims();
 
                 // Last dimension of indices represents the depth of indexing
-                let k = indices_shape.last().unwrap().clone();
+                let k = *indices_shape.last().unwrap();
 
                 if k > data.rank() {
                     bail!("ScatterND expects k (indices.shape[-1]) to be at most the rank of data");

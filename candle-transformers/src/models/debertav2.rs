@@ -450,8 +450,8 @@ impl DebertaV2DisentangledSelfAttention {
             query_layer.matmul(&div)?
         };
 
-        if self.relative_attention {
-            if let Some(rel_embeddings) = rel_embeddings {
+        if self.relative_attention
+            && let Some(rel_embeddings) = rel_embeddings {
                 let rel_embeddings = self
                     .pos_dropout
                     .as_ref()
@@ -465,7 +465,6 @@ impl DebertaV2DisentangledSelfAttention {
                     scale_factor,
                 )?);
             }
-        }
 
         if let Some(rel_att) = rel_att {
             attention_scores = attention_scores.broadcast_add(&rel_att)?;
@@ -1045,11 +1044,10 @@ impl DebertaV2Encoder {
                 rel_embeddings.as_ref(),
             )?;
 
-            if i == 0 {
-                if let Some(conv) = &self.conv {
+            if i == 0
+                && let Some(conv) = &self.conv {
                     output_states = conv.forward(hidden_states, &output_states, &input_mask)?;
                 }
-            }
 
             if query_states.is_some() {
                 query_states = Some(output_states.clone());
