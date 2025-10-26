@@ -27,7 +27,6 @@
 //! > avavx: false, neon: true, simd128: false, f16c: false
 //! > temp: 0.00 repeat-penalty: 1.00 repeat-last-n: 64
 //! > retrieved the files in 3.395583ms
-//! > Running on CPU, to run on GPU(metal), build this example with `--features metal`
 //! > loaded the model in 5.485493792s
 //! > loaded and encoded the image Tensor[dims 3, 378, 378; f32] in 4.801396417s
 //! > starting the inference loop
@@ -36,8 +35,8 @@
 //! ```
 
 use crate::models::mixformer::{Config as PhiConfig, MixFormerSequentialForCausalLM as PhiModel};
-use crate::models::with_tracing::{layer_norm, linear_b, LayerNorm, Linear};
-use candle::{IndexOp, Module, Result, Tensor, D};
+use crate::models::with_tracing::{LayerNorm, Linear, layer_norm, linear_b};
+use candle::{D, IndexOp, Module, Result, Tensor};
 use candle_nn::VarBuilder;
 
 #[derive(Debug, Clone, serde::Deserialize)]

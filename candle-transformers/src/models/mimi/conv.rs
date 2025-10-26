@@ -2,7 +2,7 @@
 // This source code is licensed under the license found in the
 // LICENSE file in the root directory of this source tree.
 
-use candle::{Module, Result, StreamTensor, StreamingModule, Tensor, D};
+use candle::{D, Module, Result, StreamTensor, StreamingModule, Tensor};
 use candle_nn::{Conv1d, VarBuilder};
 
 #[allow(clippy::enum_variant_names)]
@@ -186,11 +186,6 @@ impl NormConvTranspose1d {
 impl Module for NormConvTranspose1d {
     fn forward(&self, xs: &Tensor) -> Result<Tensor> {
         let _enter = self.span.enter();
-        // conv-transpose1d seems to be broken on metal after enough iterations. Causing
-        // the following error:
-        // _status < MTLCommandBufferStatusCommitted >
-        // -[IOGPUMetalCommandBuffer setCurrentCommandEncoder:]
-        // This is now fixed in candle.
         let xs = Tensor::conv_transpose1d(xs, &self.ws, 0, 0, self.stride, 1, self.groups)?;
         let xs = match &self.bs {
             None => xs,

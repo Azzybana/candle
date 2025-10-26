@@ -223,10 +223,7 @@ impl LayerWeights {
         };
         self.kv_cache = Some((k.clone(), v.clone()));
 
-        let y = if q.device().is_metal() && seq_len == 1 {
-            // SDPA will do MQA for us
-            candle_nn::ops::sdpa(&q, &k, &v, 1. / (self.head_dim as f32).sqrt(), 1.)?
-        } else {
+        let y = {
             // Support for MQA, useful for 70B models and mistral.
             let k = crate::utils::repeat_kv(k, self.n_head / self.n_kv_head)?;
             let v = crate::utils::repeat_kv(v, self.n_head / self.n_kv_head)?;

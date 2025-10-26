@@ -15,12 +15,10 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [dependencies]
-#accelerate-src = { workspace = true, optional = true }
 byteorder = { workspace = true }
 candle = { workspace = true }
 candle-nn = { workspace = true }
 fancy-regex = { workspace = true }
-intel-mkl-src = { workspace = true, optional = true }
 num-traits = { workspace = true }
 rand = { workspace = true }
 rayon = { workspace = true }
@@ -28,11 +26,3 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_plain = { workspace = true }
 tracing = { workspace = true }
-
-[features]
-default = []
-mkl = [
-    "dep:intel-mkl-src",
-    "candle/mkl",
-    "candle-nn/mkl",
-] # Use Intel MKL for BLAS
