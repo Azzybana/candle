@@ -202,6 +202,9 @@ pub(super) unsafe fn make_qx_quants(
 // https://github.com/ggerganov/llama.cpp/blob/8183159cf3def112f6d1fe94815fce70e1bffa12/k_quants.c#L224
 pub(super) fn make_qkx1_quants(nmax: i32, ntry: usize, x: &[f32]) -> (f32, f32) {
     let n = x.len();
+    if n == 0 {
+        return (0.0, 0.0);
+    }
     let mut l = vec![0; n];
     // Get min/max
     let min = *x
