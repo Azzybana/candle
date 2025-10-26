@@ -55,8 +55,6 @@ This documents the main changes to the `candle` crate.
   [688](https://github.com/huggingface/candle/pull/688).
 - gguf v2 support
   [725](https://github.com/huggingface/candle/pull/725).
-- Quantized llama example in Python using the pyo3 api
-  [716](https://github.com/huggingface/candle/pull/716).
 - `candle-nn` layer for conv2d-transposed
   [760](https://github.com/huggingface/candle/pull/760).
 - Add the Segment-Anything Model (SAM) as an example

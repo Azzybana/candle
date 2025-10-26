@@ -43,7 +43,6 @@
 //! - [candle-datasets](https://docs.rs/candle-datasets/). Rust access to commonly used Datasets like MNIST.
 //! - [candle-examples](https://docs.rs/candle-examples/). Examples of Candle in Use.
 //! - [candle-onnx](https://docs.rs/candle-onnx/). Loading and using ONNX models.
-//! - [candle-pyo3](https://docs.rs/candle-pyo3/). Access to Candle from Python.
 //! - [candle-transformers](https://docs.rs/candle-transformers/). Candle implementation of many published transformer models.
 //!
 
@@ -101,7 +100,6 @@ pub use metal_backend::{MetalDevice, MetalError, MetalStorage};
 
 #[cfg(not(feature = "metal"))]
 pub use dummy_metal_backend::{MetalDevice, MetalError, MetalStorage};
-
 
 pub trait ToUsize2 {
     fn to_usize2(self) -> (usize, usize);
