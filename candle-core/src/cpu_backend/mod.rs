@@ -8,7 +8,7 @@ use rayon::prelude::*;
 
 mod utils;
 pub use utils::{
-    binary_map, binary_map_vec, unary_map, unary_map_vec, Map1, Map1Any, Map2, Map2InPlace, Map2U8,
+    Map1, Map1Any, Map2, Map2InPlace, Map2U8, binary_map, binary_map_vec, unary_map, unary_map_vec,
 };
 mod conv2d;
 use conv2d::Conv2D;
@@ -1221,7 +1221,7 @@ impl MatMul {
 impl Map2 for MatMul {
     const OP: &'static str = "mat_mul";
 
-    #[cfg(all(not(feature = "mkl"), not(feature = "accelerate")))]
+    #[cfg(not(feature = "mkl"))]
     fn f<T: 'static + WithDType + num_traits::Num + Copy>(
         &self,
         lhs: &[T],
@@ -1229,7 +1229,7 @@ impl Map2 for MatMul {
         rhs: &[T],
         rhs_l: &Layout,
     ) -> Result<Vec<T>> {
-        use gemm::{gemm, Parallelism};
+        use gemm::{Parallelism, gemm};
 
         match T::DTYPE {
             DType::F16 | DType::F32 | DType::F64 => {}
@@ -1300,97 +1300,6 @@ impl Map2 for MatMul {
                     parallelism,
                 )
             }
-        }
-        Ok(dst)
-    }
-
-    #[cfg(feature = "accelerate")]
-    fn f<T: 'static + WithDType + num_traits::Num + Copy>(
-        &self,
-        lhs: &[T],
-        lhs_l: &Layout,
-        rhs: &[T],
-        rhs_l: &Layout,
-    ) -> Result<Vec<T>> {
-        let (b, m, n, k) = self.0;
-        let lhs = &lhs[lhs_l.start_offset()..];
-        let rhs = &rhs[rhs_l.start_offset()..];
-
-        let lhs_stride = lhs_l.stride();
-        let rhs_stride = rhs_l.stride();
-
-        let (a_skip, b_skip) = self.ab_skip(lhs_l, rhs_l)?;
-        let c_skip: usize = m * n;
-
-        let rhs_m1 = rhs_stride[rhs_stride.len() - 1];
-        let rhs_m2 = rhs_stride[rhs_stride.len() - 2];
-        let lhs_m1 = lhs_stride[lhs_stride.len() - 1];
-        let lhs_m2 = lhs_stride[lhs_stride.len() - 2];
-
-        let (lda, transa) = if (rhs_m1 == 1 || n == 1) && (rhs_m2 == n || k == 1) {
-            (n as i32, b'N')
-        } else if rhs_m1 == k && rhs_m2 == 1 {
-            (k as i32, b'T')
-        } else {
-            Err(self.striding_error(lhs_l, rhs_l, "non-contiguous rhs"))?
-        };
-        // The b tensor has dims batching, m, k (lhs)
-        let (ldb, transb) = if (lhs_m1 == 1 || k == 1) && (lhs_m2 == k || m == 1) {
-            (k as i32, b'N')
-        } else if lhs_m1 == m && lhs_m2 == 1 {
-            (m as i32, b'T')
-        } else {
-            Err(self.striding_error(lhs_l, rhs_l, "non-contiguous lhs"))?
-        };
-
-        let mut dst = vec![T::zero(); b * m * n];
-        match T::DTYPE {
-            DType::F16 => {
-                crate::bail!("the accelerate backend does not support f16 matmul")
-            }
-            DType::F32 => {
-                for step in 0..b {
-                    let lhs_p = &lhs[step * a_skip..];
-                    let rhs_p = &rhs[step * b_skip..];
-                    let dst_p = &mut dst[step * c_skip..];
-                    unsafe {
-                        let a = rhs_p.as_ptr() as *const f32;
-                        let b = lhs_p.as_ptr() as *const f32;
-                        let c = dst_p.as_mut_ptr() as *mut f32;
-                        let a = std::slice::from_raw_parts(a, a_skip);
-                        let b = std::slice::from_raw_parts(b, b_skip);
-                        let c = std::slice::from_raw_parts_mut(c, c_skip);
-                        crate::accelerate::sgemm(
-                            transa, transb, /* m= */ n as i32, /* n= */ m as i32,
-                            /* k= */ k as i32, /* alpha= */ 1., /* a= */ a,
-                            /* lda= */ lda, /* b= */ b, /* ldb= */ ldb,
-                            /* beta= */ 0., /* c= */ c, /* ldc= */ n as i32,
-                        )
-                    }
-                }
-            }
-            DType::F64 => {
-                for step in 0..b {
-                    let lhs_p = &lhs[step * a_skip..];
-                    let rhs_p = &rhs[step * b_skip..];
-                    let dst_p = &mut dst[step * c_skip..];
-                    unsafe {
-                        let a = rhs_p.as_ptr() as *const f64;
-                        let b = lhs_p.as_ptr() as *const f64;
-                        let c = dst_p.as_mut_ptr() as *mut f64;
-                        let a = std::slice::from_raw_parts(a, a_skip);
-                        let b = std::slice::from_raw_parts(b, b_skip);
-                        let c = std::slice::from_raw_parts_mut(c, c_skip);
-                        crate::accelerate::dgemm(
-                            transa, transb, /* m= */ n as i32, /* n= */ m as i32,
-                            /* k= */ k as i32, /* alpha= */ 1., /* a= */ a,
-                            /* lda= */ lda, /* b= */ b, /* ldb= */ ldb,
-                            /* beta= */ 0., /* c= */ c, /* ldc= */ n as i32,
-                        )
-                    }
-                }
-            }
-            dtype => Err(Error::UnsupportedDTypeForOp(dtype, "matmul").bt())?,
         }
         Ok(dst)
     }

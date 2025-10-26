@@ -12,10 +12,6 @@ pub fn get_num_threads() -> usize {
     }
 }
 
-pub fn has_accelerate() -> bool {
-    cfg!(feature = "accelerate")
-}
-
 pub fn has_mkl() -> bool {
     cfg!(feature = "mkl")
 }

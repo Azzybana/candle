@@ -47,8 +47,6 @@
 //! - [candle-transformers](https://docs.rs/candle-transformers/). Candle implementation of many published transformer models.
 //!
 
-#[cfg(feature = "accelerate")]
-mod accelerate;
 pub mod backend;
 pub mod backprop;
 pub mod conv;
@@ -85,7 +83,7 @@ pub mod utils;
 mod variable;
 
 pub use cpu_backend::{CpuStorage, CpuStorageRef};
-pub use custom_op::{CustomOp1, CustomOp2, CustomOp3, InplaceOp1, InplaceOp2, InplaceOp3, UgIOp1};
+pub use custom_op::{CustomOp1, CustomOp2, CustomOp3, InplaceOp1, InplaceOp2, InplaceOp3};
 pub use device::{Device, DeviceLocation, NdArray};
 pub use dtype::{DType, DTypeParseError, FloatDType, IntDType, WithDType};
 pub use error::{Context, Error, Result};
@@ -106,9 +104,6 @@ pub use dummy_metal_backend::{MetalDevice, MetalError, MetalStorage};
 
 #[cfg(feature = "mkl")]
 extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 pub trait ToUsize2 {
     fn to_usize2(self) -> (usize, usize);
