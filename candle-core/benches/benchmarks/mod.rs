@@ -32,13 +32,7 @@ impl BenchDevice for Device {
     fn bench_name<S: Into<String>>(&self, name: S) -> String {
         match self {
             Device::Cpu => {
-                let cpu_type = if cfg!(feature = "accelerate") {
-                    "accelerate"
-                } else if cfg!(feature = "mkl") {
-                    "mkl"
-                } else {
-                    "cpu"
-                };
+                let cpu_type = if cfg!(feature = "mkl") { "mkl" } else { "cpu" };
                 format!("{}_{}", cpu_type, name.into())
             }
             Device::Metal(_) => format!("metal_{}", name.into()),
