@@ -15,11 +15,11 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [dependencies]
-accelerate-src = { workspace = true, optional = true }
+#accelerate-src = { workspace = true, optional = true }
 byteorder = { workspace = true }
 candle-metal-kernels = { workspace = true, optional = true }
-objc2-metal = { workspace = true, optional = true }
-objc2-foundation = { workspace = true, optional = true }
+#objc2-metal = { workspace = true, optional = true }
+#objc2-foundation = { workspace = true, optional = true }
 gemm = { workspace = true }
 half = { workspace = true }
 float8 = { workspace = true }
@@ -37,8 +37,8 @@ yoke = { workspace = true }
 zip = { workspace = true }
 
 [target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "ios")))'.dependencies]
-ug = { workspace = true }
-ug-metal = { workspace = true, optional = true }
+#ug = { workspace = true }
+#ug-metal = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }

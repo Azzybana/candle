@@ -20,9 +20,9 @@ half = { workspace = true }
 once_cell = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
-objc2-metal = { workspace = true }
-objc2 = { workspace = true }
-objc2-foundation = { workspace = true }
+#objc2-metal = { workspace = true }
+#objc2 = { workspace = true }
+#objc2-foundation = { workspace = true }
 
 [dev-dependencies]
 clap = { workspace = true }

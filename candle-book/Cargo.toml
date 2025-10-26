@@ -15,7 +15,7 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [dependencies]
-accelerate-src = { workspace = true, optional = true }
+#accelerate-src = { workspace = true, optional = true }
 candle = { workspace = true }
 candle-datasets = { workspace = true }
 candle-nn = { workspace = true }
