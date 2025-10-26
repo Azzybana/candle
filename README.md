@@ -41,17 +41,7 @@ For more advanced examples, please have a look at the following section.
 
 ## Check out our examples
 
-These online demos run entirely in your browser:
-- [yolo](https://huggingface.co/spaces/lmz/candle-yolo): pose estimation and
-  object recognition.
-- [whisper](https://huggingface.co/spaces/lmz/candle-whisper): speech recognition.
-- [LLaMA2](https://huggingface.co/spaces/lmz/candle-llama2): text generation.
-- [T5](https://huggingface.co/spaces/radames/Candle-T5-Generation-Wasm): text generation.
-- [Phi-1.5, and Phi-2](https://huggingface.co/spaces/radames/Candle-Phi-1.5-Wasm): text generation.
-- [Segment Anything Model](https://huggingface.co/spaces/radames/candle-segment-anything-wasm): Image segmentation.
-- [BLIP](https://huggingface.co/spaces/radames/Candle-BLIP-Image-Captioning): image captioning.
-
-We also provide some command line based examples using state of the art models:
+We provide some command line based examples using state of the art models:
 
 - [LLaMA v1, v2, and v3](./candle-examples/examples/llama/): general LLM, includes
   the SOLAR-10.7B variant.
@@ -138,26 +128,6 @@ Run them using commands like:
 cargo run --example quantized --release
 ```
 
-There are also some wasm examples for whisper and
-[llama2.c](https://github.com/karpathy/llama2.c). You can either build them with
-`trunk` or try them online:
-[whisper](https://huggingface.co/spaces/lmz/candle-whisper),
-[llama2](https://huggingface.co/spaces/lmz/candle-llama2),
-[T5](https://huggingface.co/spaces/radames/Candle-T5-Generation-Wasm),
-[Phi-1.5, and Phi-2](https://huggingface.co/spaces/radames/Candle-Phi-1.5-Wasm),
-[Segment Anything Model](https://huggingface.co/spaces/radames/candle-segment-anything-wasm).
-
-For LLaMA2, run the following command to retrieve the weight files and start a
-test server:
-```bash
-cd candle-wasm-examples/llama2-c
-wget https://huggingface.co/spaces/lmz/candle-llama2/resolve/main/model.bin
-wget https://huggingface.co/spaces/lmz/candle-llama2/resolve/main/tokenizer.json
-trunk serve --release --port 8081
-```
-And then head over to
-[http://localhost:8081/](http://localhost:8081/).
-
 <!--- ANCHOR: useful_libraries --->
 
 ## Useful External Resources
@@ -193,7 +163,6 @@ If you have an addition to this list, please submit a pull request.
     - Embed user-defined ops/kernels, such as [flash-attention v2](https://github.com/huggingface/candle/blob/89ba005962495f2bfbda286e185e9c3c7f5300a3/candle-flash-attn/src/lib.rs#L152).
 - Backends.
     - Optimized CPU backend with optional MKL support for x86 and Accelerate for macs.
-    - WASM support, run your models in a browser.
 - Included models.
     - Language Models.
         - LLaMA v1, v2, and v3 with variants such as SOLAR-10.7B.
