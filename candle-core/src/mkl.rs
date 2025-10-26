@@ -3,7 +3,7 @@ use libc::{c_char, c_double, c_float, c_int};
 
 mod ffi {
     use super::*;
-    extern "C" {
+    unsafe extern "C" {
         pub fn vsTanh(n: c_int, a: *const c_float, y: *mut c_float);
         pub fn vdTanh(n: c_int, a: *const c_double, y: *mut c_double);
         pub fn vsExp(n: c_int, a: *const c_float, y: *mut c_float);
@@ -79,6 +79,7 @@ mod ffi {
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(unsafe_op_in_unsafe_fn)]
 #[inline]
 pub unsafe fn sgemm(
     transa: u8,
@@ -113,6 +114,7 @@ pub unsafe fn sgemm(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(unsafe_op_in_unsafe_fn)]
 #[inline]
 pub unsafe fn dgemm(
     transa: u8,
@@ -147,6 +149,7 @@ pub unsafe fn dgemm(
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(unsafe_op_in_unsafe_fn)]
 #[inline]
 pub unsafe fn hgemm(
     transa: u8,
