@@ -16,10 +16,6 @@ pub fn has_mkl() -> bool {
     cfg!(feature = "mkl")
 }
 
-pub fn metal_is_available() -> bool {
-    cfg!(feature = "metal")
-}
-
 pub fn with_avx() -> bool {
     cfg!(target_feature = "avx2")
 }

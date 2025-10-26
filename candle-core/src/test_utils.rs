@@ -4,16 +4,10 @@ use crate::{Result, Tensor};
 macro_rules! test_device {
     // TODO: Switch to generating the two last arguments automatically once concat_idents is
     // stable. https://github.com/rust-lang/rust/issues/29599
-    ($fn_name: ident, $test_cpu: ident, $test_metal: ident) => {
+    ($fn_name: ident, $test_cpu: ident) => {
         #[test]
         fn $test_cpu() -> Result<()> {
             $fn_name(&Device::Cpu)
-        }
-
-        #[cfg(feature = "metal")]
-        #[test]
-        fn $test_metal() -> Result<()> {
-            $fn_name(&Device::new_metal(0)?)
         }
     };
 }

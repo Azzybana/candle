@@ -6,7 +6,6 @@ use crate::{CpuStorage, DType, Result, Shape, Storage, WithDType};
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum DeviceLocation {
     Cpu,
-    Metal { gpu_id: usize },
 }
 
 /// Cpu

@@ -56,12 +56,9 @@ mod custom_op;
 mod device;
 pub mod display;
 mod dtype;
-mod dummy_metal_backend;
 pub mod error;
 mod indexer;
 pub mod layout;
-#[cfg(feature = "metal")]
-pub mod metal_backend;
 #[cfg(feature = "mkl")]
 mod mkl;
 pub mod npy;

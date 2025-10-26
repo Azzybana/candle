@@ -615,7 +615,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(cpu_storage) => from_cpu_storage(cpu_storage),
-            Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
 
@@ -1803,7 +1802,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(storage) => from_cpu_storage(storage),
-            Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
 
@@ -1843,7 +1841,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(storage) => from_cpu_storage(storage),
-            Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
 
@@ -2193,19 +2190,8 @@ impl Tensor {
         if self.device().same_device(device) {
             Ok(self.clone())
         } else {
-            let storage = match (&*self.storage(), device) {
-                (Storage::Cpu(storage), Device::Metal(metal)) => {
-                    Storage::Metal(metal.storage_from_cpu_storage(storage)?)
-                }
-                (Storage::Metal(storage), Device::Cpu) => Storage::Cpu(storage.to_cpu_storage()?),
-                (Storage::Cpu(storage), Device::Cpu) => Storage::Cpu(storage.clone()),
-                _ => {
-                    bail!(
-                        "not implemented yet, self.device: {:?}, device: {:?}",
-                        self.device(),
-                        device
-                    )
-                }
+            let storage = match &*self.storage() {
+                Storage::Cpu(storage) => Storage::Cpu(storage.clone()),
             };
             let op = BackpropOp::new1(self, Op::ToDevice);
             let tensor_ = Tensor_ {

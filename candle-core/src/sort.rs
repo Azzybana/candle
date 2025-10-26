@@ -75,17 +75,6 @@ impl crate::CustomOp1 for ArgSort {
         let sort_indexes = crate::CpuStorage::U32(sort_indexes);
         Ok((sort_indexes, layout.shape().into()))
     }
-
-    #[cfg(feature = "metal")]
-    fn metal_fwd(
-        &self,
-        _storage: &crate::MetalStorage,
-        _layout: &crate::Layout,
-    ) -> Result<(crate::MetalStorage, crate::Shape)> {
-        Err(crate::Error::Metal(
-            format!("no metal implementation for {}", self.name()).into(),
-        ))
-    }
 }
 
 impl Tensor {

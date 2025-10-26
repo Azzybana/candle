@@ -445,7 +445,6 @@ impl crate::CustomOp1 for QTensor {
         #[allow(clippy::infallible_destructuring_match)]
         let self_storage = match &self.storage {
             QStorage::Cpu(storage) => storage,
-            QStorage::Metal(_) => crate::bail!("Invalid storage"),
         };
         let slice = storage.as_slice::<f32>()?;
         let slice = &slice[layout.start_offset()..layout.start_offset() + src_shape.elem_count()];
