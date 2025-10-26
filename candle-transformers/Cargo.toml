@@ -31,14 +31,8 @@ tracing = { workspace = true }
 
 [features]
 default = []
-accelerate = [
-    "dep:accelerate-src",
-    "candle/accelerate",
-    "candle-nn/accelerate",
-] # Use Accelerate framework on macOS
 mkl = [
     "dep:intel-mkl-src",
     "candle/mkl",
     "candle-nn/mkl",
 ] # Use Intel MKL for BLAS
-metal = ["candle/metal", "candle-nn/metal"] # Enable Metal acceleration on macOS
