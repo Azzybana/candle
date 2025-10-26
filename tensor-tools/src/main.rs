@@ -322,7 +322,7 @@ fn run_ls(
             for name in names {
                 let shape_dtype = match tensors.get_shape_and_dtype(name) {
                     Ok((shape, dtype)) => format!("[{shape:?}; {dtype:?}]"),
-                    Err(err) => err.to_string(),
+                    Err(err) => format!("{}", err),
                 };
                 println!("{name}: {shape_dtype}")
             }
@@ -414,7 +414,7 @@ fn run_quantize_safetensors(
     let qtensors = tensors
         .into_par_iter()
         .map(|(name, tensor)| {
-            let should_quantize = tensor.rank() == 2 && tensor.dim(1)? % block_size == 0;
+            let should_quantize = tensor.rank() == 2 && tensor.shape().dims()[1] % block_size == 0;
             println!("  quantizing {name} {tensor:?} {should_quantize}");
             let tensor = if should_quantize {
                 QTensor::quantize(&tensor, dtype)?

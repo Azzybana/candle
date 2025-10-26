@@ -1,22 +1,22 @@
 [build]
 rustflags = ["-C", "target-cpu=native", "-Z", "tune-cpu=native"]
 
-[profile.release]
-rustflags = [
-    "-Z",
-    "mir-opt-level=3",
-    "-C",
-    "llvm-args=-inline-threshold=1000",
-    "-C",
-    "llvm-args=-unroll-threshold=1000",
-]
+# [profile.release]
+# rustflags = [
+#     "-Z",
+#     "mir-opt-level=3",
+#     "-C",
+#     "llvm-args=-inline-threshold=1000",
+#     "-C",
+#     "llvm-args=-unroll-threshold=1000",
+# ]
 
 [profile.dev]
 #rustflags = ["-Z", "codegen-backend=cranelift"]
 
 [env]
 RUST_BACKTRACE = "full"
-
+MIRIFLAGS = "-Zmiri-disable-isolation -Zmiri-ignore-leaks"
 [alias]
 test = "nextest run --config .cargo/nextest.toml"
 cov = "llvm-cov nextest --config .cargo/nextest.toml"
