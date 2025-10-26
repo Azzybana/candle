@@ -6,7 +6,7 @@
 //! - 💻 [GitHub](https://github.com/locuslab/convmixer)
 //!
 use candle::Result;
-use candle_nn::{batch_norm, Conv2dConfig, Module, VarBuilder};
+use candle_nn::{Conv2dConfig, Module, VarBuilder, batch_norm};
 
 #[allow(clippy::many_single_char_names)]
 fn conv2d_same(
@@ -52,14 +52,14 @@ fn block(dim: usize, kernel_size: usize, vb: VarBuilder) -> Result<impl Module> 
     }))
 }
 
-fn convmixer(
+fn convmixer<'a>(
     nclasses: usize,
     dim: usize,
     depth: usize,
     kernel_size: usize,
     patch_size: usize,
-    vb: VarBuilder,
-) -> Result<candle_nn::Func<'static>> {
+    vb: VarBuilder<'a>,
+) -> Result<candle_nn::Func<'a>> {
     let conv2d_cfg = Conv2dConfig {
         stride: patch_size,
         ..Default::default()
@@ -80,10 +80,10 @@ fn convmixer(
     }))
 }
 
-pub fn c1536_20(nclasses: usize, vb: VarBuilder) -> Result<candle_nn::Func<'static>> {
+pub fn c1536_20<'a>(nclasses: usize, vb: VarBuilder<'a>) -> Result<candle_nn::Func<'a>> {
     convmixer(nclasses, 1536, 20, 9, 7, vb)
 }
 
-pub fn c1024_20(nclasses: usize, vb: VarBuilder) -> Result<candle_nn::Func<'static>> {
+pub fn c1024_20<'a>(nclasses: usize, vb: VarBuilder<'a>) -> Result<candle_nn::Func<'a>> {
     convmixer(nclasses, 1024, 20, 9, 14, vb)
 }

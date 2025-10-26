@@ -9,10 +9,9 @@ categories.workspace = true
 license.workspace = true
 readme = "README.md"
 
-[lib]
-name = "tensor_tools"
-path = "src/lib.rs"
-crate-type = ["rlib"]
+[[bin]]
+name = "tensor-tools"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = { workspace = true }
