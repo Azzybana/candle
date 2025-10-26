@@ -9,8 +9,6 @@ rustflags = [
     "llvm-args=-inline-threshold=1000",
     "-C",
     "llvm-args=-unroll-threshold=1000",
-    "-C",
-    "llvm-args=-enable-unsafe-fp-math",
 ]
 
 [profile.dev]
@@ -30,6 +28,7 @@ fixes = ["clippy --fix --allow-dirty", "fmt"]
 doc = "doc --no-deps"
 mir = "miri test"
 audit = "audit"
+check = "clippy"
 
 [unstable]
 advanced-env = true
