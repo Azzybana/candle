@@ -1,6 +1,6 @@
 use super::{GgmlDType, QStorage};
 use crate::backend::BackendStorage;
-use crate::{DType, MetalDevice, MetalStorage, Result, Shape, D};
+use crate::{D, DType, MetalDevice, MetalStorage, Result, Shape};
 use candle_metal_kernels::metal::Buffer;
 use std::sync::Arc;
 
@@ -153,7 +153,7 @@ impl QMetalStorage {
         let mut dst_shape = src_shape.dims().to_vec();
 
         // We always use a single batch dimension and stack all the tensors in the batch on the
-        // second dimension as the implementation in candle-metal-kernels doesn't handle batch
+        // second dimension as the implementation doesn't handle batch
         // properly.
         let m = match dst_shape.len() {
             3 => dst_shape[0] * dst_shape[1],
