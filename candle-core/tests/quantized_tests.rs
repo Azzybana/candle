@@ -19,10 +19,6 @@ fn test_matmul(
     (b, m, n, k): (usize, usize, usize, usize),
     dtype: GgmlDType,
 ) -> Result<()> {
-    if device.is_metal() && (dtype == GgmlDType::Q8_1 || dtype == GgmlDType::Q8K) {
-        return Ok(());
-    }
-
     let lhs = (0..(m * k))
         .map(|v| v as f32 / (m * k) as f32)
         .collect::<Vec<_>>();
@@ -43,42 +39,6 @@ fn test_matmul(
     let error = error / (b * m * n) as f32;
     assert!(
         error <= 0.02,
-        "Error {error} is too big. \nExpected:\n {mm} \nFound:\n {res}\n for {dtype:?}"
-    );
-
-    Ok(())
-}
-
-#[cfg(feature = "metal")]
-#[test]
-fn test_matmul_mm() -> Result<()> {
-    let dtype = GgmlDType::Q8_0;
-    let device = Device::new_metal(0)?;
-
-    let m = 32;
-    let n = 32;
-    let k = 32;
-    let lhs = (0..(m * k))
-        .map(|v| v as f32 / (m * k) as f32)
-        .collect::<Vec<_>>();
-    let rhs = (0..(k * n))
-        .map(|v| v as f32 / (n * k) as f32)
-        .collect::<Vec<_>>();
-
-    let lhs = Tensor::from_slice(&lhs, (m, k), &device)?;
-    let rhs = Tensor::from_slice(&rhs, (1, 1, k, n), &device)?.repeat((5, 20, 1, 1))?;
-    let mm = lhs.broadcast_matmul(&rhs)?;
-    let qtensor = quantized::QTensor::quantize(&lhs.t()?, dtype)?;
-    let matmul = quantized::QMatMul::from_qtensor(qtensor)?;
-    let res = matmul.forward(&rhs)?;
-
-    let error: f32 = ((&mm - &res)?.abs()? / &mm.abs()?)?
-        .sum_all()?
-        .to_scalar()?;
-
-    let error = error / res.elem_count() as f32;
-    assert!(
-        error <= 0.001,
         "Error {error} is too big. \nExpected:\n {mm} \nFound:\n {res}\n for {dtype:?}"
     );
 
@@ -115,24 +75,14 @@ fn quantized_matmul(device: &Device) -> Result<()> {
     let qtensor = quantized::QTensor::quantize(&tensor_rhs.t()?, GgmlDType::Q4_0)?;
     let matmul = quantized::QMatMul::from_qtensor(qtensor)?;
     let res = matmul.forward(&lhs)?;
-    match device {
-        Device::Metal(_) => assert_eq!(
-            to_vec2_round(&res, 0)?,
-            &[
-                [84946.0, 214126.0, 344757.0, 473798.0],
-                [213458.0, 604350.0, 1000469.0, 1387990.0],
-                [341970.0, 994574.0, 1656181.0, 2302182.0]
-            ]
-        ),
-        Device::Cpu => assert_eq!(
-            to_vec2_round(&res, 0)?,
-            &[
-                [85120.0, 214562.0, 345455.0, 474748.0],
-                [213475.0, 604465.0, 1000686.0, 1388317.0],
-                [341876.0, 994283.0, 1655709.0, 2301518.0]
-            ]
-        ),
-    }
+    assert_eq!(
+        to_vec2_round(&res, 0)?,
+        &[
+            [85120.0, 214562.0, 345455.0, 474748.0],
+            [213475.0, 604465.0, 1000686.0, 1388317.0],
+            [341876.0, 994283.0, 1655709.0, 2301518.0]
+        ]
+    );
     test_matmul(device, (1, 3, 4, 256), GgmlDType::Q4_0)?;
     Ok(())
 }
@@ -171,24 +121,14 @@ fn quantized_matmul_neg(device: &Device) -> Result<()> {
     let qtensor = quantized::QTensor::quantize(&tensor_rhs.t()?, GgmlDType::Q4_0)?;
     let matmul = quantized::QMatMul::from_qtensor(qtensor)?;
     let res = matmul.forward(&lhs)?;
-    match device {
-        Device::Metal(_) => assert_eq!(
-            to_vec2_round(&res, 0)?,
-            &[
-                [243659.0, -19716.0, -285444.0, -550439.0],
-                [23779.0, 21653.0, 19404.0, 18349.0],
-                [-196101.0, 63021.0, 324252.0, 587137.0]
-            ]
-        ),
-        Device::Cpu => assert_eq!(
-            to_vec2_round(&res, 0)?,
-            &[
-                [243524.0, -19596.0, -285051.0, -549815.0],
-                [23777.0, 21651.0, 19398.0, 18367.0],
-                [-196472.0, 63012.0, 324585.0, 587902.0]
-            ]
-        ),
-    }
+    assert_eq!(
+        to_vec2_round(&res, 0)?,
+        &[
+            [243524.0, -19596.0, -285051.0, -549815.0],
+            [23777.0, 21651.0, 19398.0, 18367.0],
+            [-196472.0, 63012.0, 324585.0, 587902.0]
+        ]
+    );
     let lhs2 = Tensor::stack(&[&lhs, &lhs], 0)?;
     let res2 = matmul.forward(&lhs2)?;
     let res2 = res2.i(1)?;
@@ -942,7 +882,6 @@ quantized_matmul!(
     quantized_matmul_q6k_cpu,
     GgmlDType::Q6K
 );
-// Not implemented on metal
 quantized_matmul!(
     quantized_matmul_q8k_bis,
     quantized_matmul_q8k_cpu,

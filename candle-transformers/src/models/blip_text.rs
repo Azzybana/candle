@@ -2,14 +2,13 @@
 //!
 //! - 📝 [Paper](https://arxiv.org/abs/2201.12086). BLIP: Bootstrapping Language-Image Pre-training for Unified Vision-Language Understanding and Generation"
 //!
-//! - ⚡ [Interactive Wasm Example](https://huggingface.co/spaces/radames/Candle-BLIP-Image-Captioning)
 //! - 💻 [GH Link](https://github.com/salesforce/BLIP)
 //! - 🤗 [HF Link](https://huggingface.co/Salesforce/blip-image-captioning-base)
 //! - 📝 [Paper](https://arxiv.org/abs/2201.12086)
 //!
-use super::with_tracing::{linear, Embedding, Linear};
-use candle::{Module, Result, Tensor, D};
-use candle_nn::{layer_norm, LayerNorm, VarBuilder};
+use super::with_tracing::{Embedding, Linear, linear};
+use candle::{D, Module, Result, Tensor};
+use candle_nn::{LayerNorm, VarBuilder, layer_norm};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]

@@ -5,13 +5,9 @@ use std::borrow::Cow;
 
 #[cfg(target_feature = "avx2")]
 pub mod avx;
-mod dummy_metal;
 pub mod ggml_file;
 pub mod gguf_file;
 pub mod k_quants;
-mod metal {
-    pub use super::dummy_metal::*;
-}
 
 #[cfg(target_feature = "neon")]
 pub mod neon;
@@ -34,45 +30,36 @@ impl Device {
                 let storage = dtype.cpu_zeros(elem_count);
                 Ok(QStorage::Cpu(storage))
             }
-            Device::Metal(metal) => {
-                let storage = metal::QMetalStorage::zeros(metal, elem_count, dtype)?;
-                Ok(QStorage::Metal(storage))
-            }
         }
     }
 }
 
 pub enum QStorage {
     Cpu(Box<dyn QuantizedType>),
-    Metal(metal::QMetalStorage),
 }
 
 impl QStorage {
     fn block_size(&self) -> usize {
         match self {
             QStorage::Cpu(storage) => storage.block_size(),
-            QStorage::Metal(storage) => storage.dtype().block_size(),
         }
     }
 
     fn dtype(&self) -> GgmlDType {
         match self {
             QStorage::Cpu(storage) => storage.dtype(),
-            QStorage::Metal(storage) => storage.dtype(),
         }
     }
 
     fn device(&self) -> Device {
         match self {
             QStorage::Cpu(_storage) => Device::Cpu,
-            QStorage::Metal(storage) => Device::Metal(storage.device().clone()),
         }
     }
 
     fn size_in_bytes(&self) -> usize {
         match self {
             QStorage::Cpu(storage) => storage.storage_size_in_bytes(),
-            QStorage::Metal(storage) => storage.storage_size_in_bytes(),
         }
     }
 
@@ -81,7 +68,6 @@ impl QStorage {
             (QStorage::Cpu(storage), Storage::Cpu(src)) => {
                 storage.from_float(src.as_slice::<f32>()?);
             }
-            (QStorage::Metal(storage), Storage::Metal(src)) => storage.quantize(src)?,
             _ => crate::bail!("Invalid dequantize storage locations do not match"),
         }
         Ok(())
@@ -90,7 +76,6 @@ impl QStorage {
     fn dequantize(&self, elem_count: usize) -> Result<Storage> {
         match self {
             QStorage::Cpu(storage) => Ok(Storage::Cpu(storage.dequantize(elem_count)?)),
-            QStorage::Metal(storage) => Ok(Storage::Metal(storage.dequantize(elem_count)?)),
         }
     }
 
@@ -101,9 +86,6 @@ impl QStorage {
                 let size_in_bytes = storage.storage_size_in_bytes();
                 let data = unsafe { std::slice::from_raw_parts(data_ptr, size_in_bytes) };
                 Ok(Cow::from(data))
-            }
-            QStorage::Metal(_) => {
-                crate::bail!("not implemented");
             }
         }
     }
@@ -470,18 +452,6 @@ impl crate::CustomOp1 for QTensor {
         let mut dst_storage = vec![0f32; dst_shape.elem_count()];
         self_storage.matmul_t((dst_shape.elem_count() / n, k, n), slice, &mut dst_storage)?;
         Ok((crate::CpuStorage::F32(dst_storage), dst_shape))
-    }
-
-    fn metal_fwd(
-        &self,
-        storage: &crate::MetalStorage,
-        layout: &crate::Layout,
-    ) -> Result<(crate::MetalStorage, Shape)> {
-        let self_storage = match &self.storage {
-            QStorage::Metal(metal) => metal,
-            _ => unreachable!("Cannot call metal matmul on non metal QTensor"),
-        };
-        self_storage.fwd(&self.shape, storage, layout)
     }
 }
 

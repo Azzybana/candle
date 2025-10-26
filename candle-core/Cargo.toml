@@ -32,8 +32,6 @@ thiserror = { workspace = true }
 yoke = { workspace = true }
 zip = { workspace = true }
 
-[target.'cfg(all(not(target_arch = "wasm32"), not(target_os = "ios")))'.dependencies]
-
 [dev-dependencies]
 anyhow = { workspace = true }
 clap = { workspace = true }

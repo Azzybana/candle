@@ -464,7 +464,6 @@ print(w.grad.shape)
 print(w.grad[0])
 */
 fn conv2d_grad(dev: &Device) -> Result<()> {
-    // conv-transposes are not implemented for metal
     use candle_core::Var;
     let t = Var::from_slice(
         &[

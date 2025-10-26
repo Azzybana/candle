@@ -26,12 +26,10 @@ fn ones(device: &Device) -> Result<()> {
         Tensor::ones((2, 3), DType::F32, device)?.to_vec2::<f32>()?,
         [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
     );
-    if !device.is_metal() {
-        assert_eq!(
-            Tensor::ones((2, 3), DType::F64, device)?.to_vec2::<f64>()?,
-            [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
-        );
-    }
+    assert_eq!(
+        Tensor::ones((2, 3), DType::F64, device)?.to_vec2::<f64>()?,
+        [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
+    );
     assert_eq!(
         Tensor::ones((2, 3), DType::F16, device)?.to_vec2::<half::f16>()?,
         [
@@ -63,23 +61,21 @@ fn ones(device: &Device) -> Result<()> {
         ],
     );
 
-    if !device.is_metal() {
-        assert_eq!(
-            Tensor::ones((2, 3), DType::F8E4M3, device)?.to_vec2::<F8E4M3>()?,
+    assert_eq!(
+        Tensor::ones((2, 3), DType::F8E4M3, device)?.to_vec2::<F8E4M3>()?,
+        [
             [
-                [
-                    F8E4M3::from_f32(1.),
-                    F8E4M3::from_f32(1.),
-                    F8E4M3::from_f32(1.)
-                ],
-                [
-                    F8E4M3::from_f32(1.),
-                    F8E4M3::from_f32(1.),
-                    F8E4M3::from_f32(1.)
-                ]
+                F8E4M3::from_f32(1.),
+                F8E4M3::from_f32(1.),
+                F8E4M3::from_f32(1.)
             ],
-        );
-    }
+            [
+                F8E4M3::from_f32(1.),
+                F8E4M3::from_f32(1.),
+                F8E4M3::from_f32(1.)
+            ]
+        ],
+    );
     Ok(())
 }
 
@@ -129,22 +125,20 @@ fn arange(device: &Device) -> Result<()> {
         [5, 4, 3, 2, 1],
     );
 
-    if !device.is_metal() {
-        assert_eq!(
-            Tensor::arange_step(
-                F8E4M3::from_f32(0.),
-                F8E4M3::from_f32(5.),
-                F8E4M3::from_f32(2.),
-                device
-            )?
-            .to_vec1::<F8E4M3>()?,
-            [
-                F8E4M3::from_f32(0.),
-                F8E4M3::from_f32(2.),
-                F8E4M3::from_f32(4.),
-            ],
-        );
-    }
+    assert_eq!(
+        Tensor::arange_step(
+            F8E4M3::from_f32(0.),
+            F8E4M3::from_f32(5.),
+            F8E4M3::from_f32(2.),
+            device
+        )?
+        .to_vec1::<F8E4M3>()?,
+        [
+            F8E4M3::from_f32(0.),
+            F8E4M3::from_f32(2.),
+            F8E4M3::from_f32(4.),
+        ],
+    );
 
     Ok(())
 }
@@ -288,8 +282,6 @@ fn unary_op(device: &Device) -> Result<()> {
         test_utils::to_vec1_round(&y, 4)?,
         [-1.2642, 0.0000, -1.7293, 3.0000]
     );
-    // This test failed on metal prior to the following PR:
-    // https://github.com/huggingface/candle/pull/2490
     let y = tensor.reshape((2, 2))?.t()?.elu(2.)?.flatten_all()?;
     assert_eq!(
         test_utils::to_vec1_round(&y, 4)?,

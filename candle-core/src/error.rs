@@ -1,5 +1,5 @@
 //! Candle-specific Error and Result
-use crate::{DType, DeviceLocation, Layout, MetalError, Shape};
+use crate::{DType, DeviceLocation, Layout, Shape};
 
 #[derive(Debug, Clone)]
 pub struct MatMulUnexpectedStriding {
@@ -160,16 +160,10 @@ pub enum Error {
     BackwardNotSupported { op: &'static str },
 
     // === Other Errors ===
-    #[error("the candle crate has not been built with metal support")]
-    NotCompiledWithMetalSupport,
-
     #[error("cannot find tensor {path}")]
     CannotFindTensor { path: String },
 
     // === Wrapped Errors ===
-    #[error("Metal error {0}")]
-    Metal(#[from] MetalError),
-
     #[error(transparent)]
     TryFromIntError(#[from] core::num::TryFromIntError),
 

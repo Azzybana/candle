@@ -2,16 +2,15 @@
 //!
 //! The blip-image-captioning model can generate captions for an input image.
 //!
-//! - ⚡ [Interactive Wasm Example](https://huggingface.co/spaces/radames/Candle-BLIP-Image-Captioning)
 //! - 💻 [GH Link](https://github.com/salesforce/BLIP)
 //! - 🤗 [HF Link](https://huggingface.co/Salesforce/blip-image-captioning-base)
 //! - 📝 [Paper](https://arxiv.org/abs/2201.12086)
 //!
 
 use super::blip_text;
-use super::with_tracing::{conv2d, linear, Conv2d, Linear};
-use candle::{Module, Result, Tensor, D};
-use candle_nn::{layer_norm, Conv2dConfig, LayerNorm, VarBuilder};
+use super::with_tracing::{Conv2d, Linear, conv2d, linear};
+use candle::{D, Module, Result, Tensor};
+use candle_nn::{Conv2dConfig, LayerNorm, VarBuilder, layer_norm};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]

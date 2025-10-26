@@ -2,13 +2,12 @@
 //!
 //! See ["LLaMA 2: Open Foundation and Fine-Tuned Chat Models"](https://arxiv.org/abs/2307.09288)
 //!
-//! - ⚡ [Interactive Wasm Example](https://huggingface.co/spaces/lmz/candle-llama2)
 //! - 💻 llama2.c [GH Link](https://github.com/karpathy/llama2.c)
 //!
 
-use candle::{DType, Device, IndexOp, Result, Tensor, D};
+use candle::{D, DType, Device, IndexOp, Result, Tensor};
 use candle_nn::linear_no_bias as linear;
-use candle_nn::{embedding, rms_norm, Embedding, Linear, Module, RmsNorm, VarBuilder};
+use candle_nn::{Embedding, Linear, Module, RmsNorm, VarBuilder, embedding, rms_norm};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]

@@ -95,12 +95,6 @@ pub use strided_index::{StridedBlocks, StridedIndex};
 pub use tensor::{Tensor, TensorId};
 pub use variable::Var;
 
-#[cfg(feature = "metal")]
-pub use metal_backend::{MetalDevice, MetalError, MetalStorage};
-
-#[cfg(not(feature = "metal"))]
-pub use dummy_metal_backend::{MetalDevice, MetalError, MetalStorage};
-
 pub trait ToUsize2 {
     fn to_usize2(self) -> (usize, usize);
 }
