@@ -14,28 +14,12 @@ impl BenchDevice for Device {
     fn sync(&self) -> Result<()> {
         match self {
             Device::Cpu => Ok(()),
-            Device::Metal(device) => {
-                #[cfg(feature = "metal")]
-                return Ok(device.wait_until_completed()?);
-                #[cfg(not(feature = "metal"))]
-                panic!("Metal device without metal feature enabled: {:?}", device)
-            }
         }
     }
 
     fn bench_name<S: Into<String>>(&self, name: S) -> String {
         match self {
-            Device::Cpu => {
-                let cpu_type = if cfg!(feature = "accelerate") {
-                    "accelerate"
-                } else if cfg!(feature = "mkl") {
-                    "mkl"
-                } else {
-                    "cpu"
-                };
-                format!("{}_{}", cpu_type, name.into())
-            }
-            Device::Metal(_) => format!("metal_{}", name.into()),
+            Device::Cpu => format!("cpu_{}", name.into()),
         }
     }
 }
@@ -47,9 +31,6 @@ struct BenchDeviceHandler {
 impl BenchDeviceHandler {
     pub fn new() -> Result<Self> {
         let mut devices = Vec::new();
-        if cfg!(feature = "metal") {
-            devices.push(Device::new_metal(0)?);
-        }
         devices.push(Device::Cpu);
         Ok(Self { devices })
     }
