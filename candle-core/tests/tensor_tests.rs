@@ -1623,38 +1623,38 @@ fn zero_dim(device: &Device) -> Result<()> {
     Ok(())
 }
 
-test_device!(zeros, zeros_cpu, zeros_gpu);
-test_device!(ones, ones_cpu, ones_gpu);
-test_device!(full, full_cpu, full_gpu);
-test_device!(const_set, cs_cpu, cs_gpu);
-test_device!(arange, arange_cpu, arange_gpu);
-test_device!(add_mul, add_mul_cpu, add_mul_gpu);
-test_device!(tensor_2d, tensor_2d_cpu, tensor_2d_gpu);
-test_device!(narrow, narrow_cpu, narrow_gpu);
-test_device!(broadcast, broadcast_cpu, broadcast_gpu);
-test_device!(slice_set, ss_cpu, ss_gpu);
-test_device!(cat, cat_cpu, cat_gpu);
-test_device!(sum, sum_cpu, sum_gpu);
-test_device!(min, min_cpu, min_gpu);
-test_device!(max, max_cpu, max_gpu);
-test_device!(argmax, argmax_cpu, argmax_gpu);
-test_device!(argmin, argmin_cpu, argmin_gpu);
-test_device!(transpose, transpose_cpu, transpose_gpu);
-test_device!(unary_op, unary_op_cpu, unary_op_gpu);
-test_device!(binary_op, binary_op_cpu, binary_op_gpu);
-test_device!(embeddings, embeddings_cpu, embeddings_gpu);
-test_device!(cmp, cmp_cpu, cmp_gpu);
-test_device!(broadcasting, broadcasting_cpu, broadcasting_gpu);
-test_device!(index_select, index_select_cpu, index_select_gpu);
-test_device!(index_add, index_add_cpu, index_add_gpu);
-test_device!(gather, gather_cpu, gather_gpu);
-test_device!(scatter, scatter_cpu, scatter_gpu);
-test_device!(slice_scatter, slice_scatter_cpu, slice_scatter_gpu);
-test_device!(randn, randn_cpu, randn_gpu);
-test_device!(clamp, clamp_cpu, clamp_gpu);
-test_device!(asort, asort_cpu, asort_gpu);
-test_device!(var, var_cpu, var_gpu);
-test_device!(zero_dim, zero_dim_cpu, zero_dim_gpu);
+test_device!(zeros, zeros_cpu);
+test_device!(ones, ones_cpu);
+test_device!(full, full_cpu);
+test_device!(const_set, cs_cpu);
+test_device!(arange, arange_cpu);
+test_device!(add_mul, add_mul_cpu);
+test_device!(tensor_2d, tensor_2d_cpu);
+test_device!(narrow, narrow_cpu);
+test_device!(broadcast, broadcast_cpu);
+test_device!(slice_set, ss_cpu);
+test_device!(cat, cat_cpu);
+test_device!(sum, sum_cpu);
+test_device!(min, min_cpu);
+test_device!(max, max_cpu);
+test_device!(argmax, argmax_cpu);
+test_device!(argmin, argmin_cpu);
+test_device!(transpose, transpose_cpu);
+test_device!(unary_op, unary_op_cpu);
+test_device!(binary_op, binary_op_cpu);
+test_device!(embeddings, embeddings_cpu);
+test_device!(cmp, cmp_cpu);
+test_device!(broadcasting, broadcasting_cpu);
+test_device!(index_select, index_select_cpu);
+test_device!(index_add, index_add_cpu);
+test_device!(gather, gather_cpu);
+test_device!(scatter, scatter_cpu);
+test_device!(slice_scatter, slice_scatter_cpu);
+test_device!(randn, randn_cpu);
+test_device!(clamp, clamp_cpu);
+test_device!(asort, asort_cpu);
+test_device!(var, var_cpu);
+test_device!(zero_dim, zero_dim_cpu);
 
 fn tensor_send_sync(device: &Device) -> Result<()> {
     let tensor = Tensor::new(vec![1.0f32, 2.0, 3.0], device)?;
@@ -1670,7 +1670,7 @@ fn tensor_send_sync(device: &Device) -> Result<()> {
 
     Ok(())
 }
-test_device!(tensor_send_sync, tensor_send_sync_cpu, tensor_send_sync_gpu);
+test_device!(tensor_send_sync, tensor_send_sync_cpu);
 
 // There was originally a bug on the CPU implementation for randn
 // https://github.com/huggingface/candle/issues/381

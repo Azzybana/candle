@@ -318,12 +318,12 @@ fn sigmoid(device: &Device) -> Result<()> {
     Ok(())
 }
 
-test_device!(ropei, ropei_cpu, ropei_gpu);
-test_device!(rope, rope_cpu, rope_gpu);
-test_device!(rope_thd, rope_thd_cpu, rope_thd_gpu);
-test_device!(softmax, softmax_cpu, softmax_gpu);
-test_device!(rms_norm, rms_norm_cpu, rms_norm_gpu);
-test_device!(rms_norml, rms_norml_cpu, rms_norml_gpu);
-test_device!(layer_norm, ln_cpu, ln_gpu);
-test_device!(layer_norml, lnl_cpu, lnl_gpu);
-test_device!(sigmoid, sigmoid_cpu, sigmoid_gpu);
+test_device!(ropei, ropei_cpu);
+test_device!(rope, rope_cpu);
+test_device!(rope_thd, rope_thd_cpu);
+test_device!(softmax, softmax_cpu);
+test_device!(rms_norm, rms_norm_cpu);
+test_device!(rms_norml, rms_norml_cpu);
+test_device!(layer_norm, ln_cpu);
+test_device!(layer_norml, lnl_cpu);
+test_device!(sigmoid, sigmoid_cpu);

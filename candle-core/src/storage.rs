@@ -12,7 +12,7 @@ pub enum Storage {
 }
 
 impl Storage {
-    pub fn try_clone(&self, layout: &Layout) -> Result<Self> {
+    pub fn try_clone(&self, _layout: &Layout) -> Result<Self> {
         match self {
             Self::Cpu(storage) => Ok(Self::Cpu(storage.clone())),
         }

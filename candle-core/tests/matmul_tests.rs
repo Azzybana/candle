@@ -128,8 +128,8 @@ fn mm_layout(device: &Device) -> Result<()> {
     Ok(())
 }
 
-test_device!(matmul, matmul_cpu, matmul_gpu);
-test_device!(matmul_bf16, matmul_bf16_cpu, matmul_bf16_gpu);
-test_device!(broadcast_matmul, broadcast_matmul_cpu, broadcast_matmul_gpu);
-test_device!(squeeze_mm, squeeze_mm_cpu, squeeze_mm_gpu);
-test_device!(mm_layout, mm_layout_cpu, mm_layout_gpu);
+test_device!(matmul, matmul_cpu);
+test_device!(matmul_bf16, matmul_bf16_cpu);
+test_device!(broadcast_matmul, broadcast_matmul_cpu);
+test_device!(squeeze_mm, squeeze_mm_cpu);
+test_device!(mm_layout, mm_layout_cpu);

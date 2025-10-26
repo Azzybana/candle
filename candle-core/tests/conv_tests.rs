@@ -909,14 +909,10 @@ fn conv2d_grad(dev: &Device) -> Result<()> {
     Ok(())
 }
 
-test_device!(conv1d, conv1d_cpu, conv1d_gpu);
-test_device!(conv1d_small, conv1d_small_cpu, conv1d_small_gpu);
-test_device!(conv2d, conv2d_cpu, conv2d_gpu);
-test_device!(
-    conv2d_non_square,
-    conv2d_non_square_cpu,
-    conv2d_non_square_gpu
-);
-test_device!(conv2d_small, conv2d_small_cpu, conv2d_small_gpu);
-test_device!(conv2d_smaller, conv2d_smaller_cpu, conv2d_smaller_gpu);
-test_device!(conv2d_grad, conv2d_grad_cpu, conv2d_grad_gpu);
+test_device!(conv1d, conv1d_cpu);
+test_device!(conv1d_small, conv1d_small_cpu);
+test_device!(conv2d, conv2d_cpu);
+test_device!(conv2d_non_square, conv2d_non_square_cpu);
+test_device!(conv2d_small, conv2d_small_cpu);
+test_device!(conv2d_smaller, conv2d_smaller_cpu);
+test_device!(conv2d_grad, conv2d_grad_cpu);
