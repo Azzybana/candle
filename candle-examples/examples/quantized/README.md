@@ -5,7 +5,7 @@ This example provides a quantized LLaMA model similar to
 built-in quantization methods. Supported features include:
 
 - 2-bit, 3-bit, 4-bit, 5-bit, 6-bit and 8-bit integer quantization support.
-- SIMD optimizations on Apple Silicon and x86.
+- SIMD optimizations on x86.
 - Support using the `gguf` and `ggml` file formats.
 
 The weights are automatically downloaded for you from the [HuggingFace

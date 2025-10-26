@@ -248,10 +248,6 @@ impl Device {
         matches!(self, Self::Cpu)
     }
 
-    pub fn is_metal(&self) -> bool {
-        false
-    }
-
     pub fn supports_bf16(&self) -> bool {
         match self {
             Self::Cpu => false,
@@ -265,10 +261,6 @@ impl Device {
         } else {
             DType::F32
         }
-    }
-
-    pub fn metal_if_available(ordinal: usize) -> Result<Self> {
-        Ok(Self::Cpu)
     }
 
     pub(crate) fn rand_uniform_f64(

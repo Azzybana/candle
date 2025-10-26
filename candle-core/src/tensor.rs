@@ -1772,7 +1772,6 @@ impl Tensor {
         };
         match &*self.storage() {
             Storage::Cpu(storage) => from_cpu_storage(storage),
-            Storage::Metal(storage) => from_cpu_storage(&storage.to_cpu_storage()?),
         }
     }
 
