@@ -31,7 +31,7 @@ impl Cpu<ARR> for CurrentCpu {
     }
 
     unsafe fn load(mem_addr: *const f32) -> Self::Unit {
-        v128_load(mem_addr as *mut v128)
+        v128_load(mem_addr as *const v128)
     }
 
     unsafe fn vec_add(a: Self::Unit, b: Self::Unit) -> Self::Unit {
