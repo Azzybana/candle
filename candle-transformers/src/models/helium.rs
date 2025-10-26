@@ -7,10 +7,6 @@ use candle::{D, DType, Device, Result, Tensor};
 use candle_nn::{Module, VarBuilder};
 use std::sync::Arc;
 
-fn default_use_flash_attn() -> bool {
-    false
-}
-
 #[derive(Debug, Clone, serde::Deserialize)]
 pub struct Config {
     pub attention_bias: bool,

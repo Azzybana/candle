@@ -96,7 +96,6 @@ impl WDiffNeXt {
         c_cond: usize,
         clip_embd: usize,
         patch_size: usize,
-        use_flash_attn: bool,
         vb: VarBuilder,
     ) -> Result<Self> {
         const C_HIDDEN: [usize; 4] = [320, 640, 1280, 1280];
@@ -171,14 +170,8 @@ impl WDiffNeXt {
                 let attn_block = if i == 0 {
                     None
                 } else {
-                    let attn_block = AttnBlock::new(
-                        c_hidden,
-                        c_cond,
-                        NHEAD[i],
-                        true,
-                        use_flash_attn,
-                        vb.pp(layer_i),
-                    )?;
+                    let attn_block =
+                        AttnBlock::new(c_hidden, c_cond, NHEAD[i], true, vb.pp(layer_i))?;
                     layer_i += 1;
                     Some(attn_block)
                 };
@@ -216,14 +209,8 @@ impl WDiffNeXt {
                 let attn_block = if i == 0 {
                     None
                 } else {
-                    let attn_block = AttnBlock::new(
-                        c_hidden,
-                        c_cond,
-                        NHEAD[i],
-                        true,
-                        use_flash_attn,
-                        vb.pp(layer_i),
-                    )?;
+                    let attn_block =
+                        AttnBlock::new(c_hidden, c_cond, NHEAD[i], true, vb.pp(layer_i))?;
                     layer_i += 1;
                     Some(attn_block)
                 };

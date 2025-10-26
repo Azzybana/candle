@@ -36,12 +36,10 @@ pub struct Config {
     pub(crate) use_cache: bool,
     #[serde(default)]
     pub(crate) use_qkv_bias: bool, // Used in StableLM-2
-    #[serde(default)]
-    pub(crate) use_flash_attn: bool, // Not in config.json
 }
 
 impl Config {
-    pub fn stablelm_3b_4e1t(use_flash_attn: bool) -> Self {
+    pub fn stablelm_3b_4e1t() -> Self {
         Self {
             vocab_size: 50304,
             intermediate_size: 6912,
@@ -56,7 +54,6 @@ impl Config {
             layer_norm_eps: 1e-5,
             use_qkv_bias: false,
             use_cache: true,
-            use_flash_attn,
         }
     }
 
@@ -70,10 +67,6 @@ impl Config {
 
     pub fn num_kv_groups(&self) -> usize {
         self.num_attention_heads / self.num_key_value_heads
-    }
-
-    pub fn set_use_flash_attn(&mut self, use_flash_attn: bool) {
-        self.use_flash_attn = use_flash_attn
     }
 }
 
@@ -177,7 +170,6 @@ struct Attention {
     kv_cache: Option<(Tensor, Tensor)>,
     use_cache: bool,
     rotary_ndims: usize,
-    use_flash_attn: bool,
     span: tracing::Span,
 }
 
@@ -211,7 +203,6 @@ impl Attention {
             kv_cache: None,
             use_cache: cfg.use_cache,
             rotary_ndims: cfg.rotary_ndims(),
-            use_flash_attn: cfg.use_flash_attn,
             span: tracing::span!(tracing::Level::TRACE, "attn"),
         })
     }

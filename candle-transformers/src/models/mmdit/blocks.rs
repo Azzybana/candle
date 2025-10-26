@@ -308,16 +308,10 @@ pub struct MMDiTJointBlock {
     x_block: DiTBlock,
     context_block: DiTBlock,
     num_heads: usize,
-    use_flash_attn: bool,
 }
 
 impl MMDiTJointBlock {
-    pub fn new(
-        hidden_size: usize,
-        num_heads: usize,
-        use_flash_attn: bool,
-        vb: nn::VarBuilder,
-    ) -> Result<Self> {
+    pub fn new(hidden_size: usize, num_heads: usize, vb: nn::VarBuilder) -> Result<Self> {
         let x_block = DiTBlock::new(hidden_size, num_heads, vb.pp("x_block"))?;
         let context_block = DiTBlock::new(hidden_size, num_heads, vb.pp("context_block"))?;
 
@@ -325,7 +319,6 @@ impl MMDiTJointBlock {
             x_block,
             context_block,
             num_heads,
-            use_flash_attn,
         })
     }
 }
@@ -347,16 +340,10 @@ pub struct MMDiTXJointBlock {
     x_block: SelfAttnDiTBlock,
     context_block: DiTBlock,
     num_heads: usize,
-    use_flash_attn: bool,
 }
 
 impl MMDiTXJointBlock {
-    pub fn new(
-        hidden_size: usize,
-        num_heads: usize,
-        use_flash_attn: bool,
-        vb: nn::VarBuilder,
-    ) -> Result<Self> {
+    pub fn new(hidden_size: usize, num_heads: usize, vb: nn::VarBuilder) -> Result<Self> {
         let x_block = SelfAttnDiTBlock::new(hidden_size, num_heads, vb.pp("x_block"))?;
         let context_block = DiTBlock::new(hidden_size, num_heads, vb.pp("context_block"))?;
 
@@ -364,7 +351,6 @@ impl MMDiTXJointBlock {
             x_block,
             context_block,
             num_heads,
-            use_flash_attn,
         })
     }
 }
@@ -413,24 +399,6 @@ impl ContextQkvOnlyJointBlock {
     }
 }
 
-// A QKV-attention that is compatible with the interface of candle_flash_attn::flash_attn
-// Flash attention regards q, k, v dimensions as (batch_size, seqlen, nheads, headdim)
-fn flash_compatible_attention(
-    q: &Tensor,
-    k: &Tensor,
-    v: &Tensor,
-    softmax_scale: f32,
-) -> Result<Tensor> {
-    let q_dims_for_matmul = q.transpose(1, 2)?.dims().to_vec();
-    let rank = q_dims_for_matmul.len();
-    let q = q.transpose(1, 2)?.flatten_to(rank - 3)?;
-    let k = k.transpose(1, 2)?.flatten_to(rank - 3)?;
-    let v = v.transpose(1, 2)?.flatten_to(rank - 3)?;
-    let attn_weights = (q.matmul(&k.t()?)? * softmax_scale as f64)?;
-    let attn_scores = candle_nn::ops::softmax_last_dim(&attn_weights)?.matmul(&v)?;
-    attn_scores.reshape(q_dims_for_matmul)?.transpose(1, 2)
-}
-
 fn joint_attn(context_qkv: &Qkv, x_qkv: &Qkv, num_heads: usize) -> Result<(Tensor, Tensor)> {
     let qkv = Qkv {
         q: Tensor::cat(&[&context_qkv.q, &x_qkv.q], 1)?,
@@ -458,6 +426,8 @@ fn attn(qkv: &Qkv, num_heads: usize) -> Result<Tensor> {
 
     let headdim = qkv.q.dim(D::Minus1)?;
     let softmax_scale = 1.0 / (headdim as f64).sqrt();
-    let attn = flash_compatible_attention(&qkv.q, &qkv.k, &qkv.v, softmax_scale as f32)?;
+    let attn_weights = (qkv.q.matmul(&qkv.k.transpose(2, 3)?)? * softmax_scale)?;
+    let attn_weights = candle_nn::ops::softmax_last_dim(&attn_weights)?;
+    let attn = attn_weights.matmul(&qkv.v)?;
     attn.reshape((batch_size, seqlen, ()))
 }

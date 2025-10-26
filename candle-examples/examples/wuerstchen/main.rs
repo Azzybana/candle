@@ -274,14 +274,8 @@ fn run(args: Args) -> Result<()> {
                 candle_nn::VarBuilder::from_mmaped_safetensors(&[file], DType::F32, &device)?
             };
             wuerstchen::prior::WPrior::new(
-                /* c_in */ PRIOR_CIN,
-                /* c */ 1536,
-                /* c_cond */ 1280,
-                /* c_r */ 64,
-                /* depth */ 32,
-                /* nhead */ 24,
-                args.use_flash_attn,
-                vb,
+                /* c_in */ PRIOR_CIN, /* c */ 1536, /* c_cond */ 1280,
+                /* c_r */ 64, /* depth */ 32, /* nhead */ 24, vb,
             )?
         };
         let prior_scheduler = wuerstchen::ddpm::DDPMWScheduler::new(60, Default::default())?;
@@ -328,7 +322,6 @@ fn run(args: Args) -> Result<()> {
             /* c_cond */ 1024,
             /* clip_embd */ 1024,
             /* patch_size */ 2,
-            args.use_flash_attn,
             vb,
         )?
     };

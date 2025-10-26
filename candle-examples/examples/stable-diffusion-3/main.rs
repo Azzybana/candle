@@ -55,10 +55,6 @@ struct Args {
     #[arg(long)]
     tracing: bool,
 
-    /// Use flash_attn to accelerate attention operation in the MMDiT.
-    #[arg(long)]
-    use_flash_attn: bool,
-
     /// The height in pixels of the generated image.
     #[arg(long, default_value_t = 1024)]
     height: usize,
@@ -102,7 +98,6 @@ fn main() -> Result<()> {
         uncond_prompt,
         cpu,
         tracing,
-        use_flash_attn,
         height,
         width,
         num_inference_steps,
@@ -235,11 +230,7 @@ fn main() -> Result<()> {
 
     let start_time = std::time::Instant::now();
     let x = {
-        let mmdit = MMDiT::new(
-            &mmdit_config,
-            use_flash_attn,
-            vb.pp("model.diffusion_model"),
-        )?;
+        let mmdit = MMDiT::new(&mmdit_config, vb.pp("model.diffusion_model"))?;
         sampling::euler_sample(
             &mmdit,
             &y,

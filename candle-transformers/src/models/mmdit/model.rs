@@ -82,7 +82,7 @@ pub struct MMDiT {
 }
 
 impl MMDiT {
-    pub fn new(cfg: &Config, use_flash_attn: bool, vb: nn::VarBuilder) -> Result<Self> {
+    pub fn new(cfg: &Config, vb: nn::VarBuilder) -> Result<Self> {
         let hidden_size = cfg.head_size * cfg.depth;
         let core = MMDiTCore::new(
             cfg.depth,
@@ -90,7 +90,6 @@ impl MMDiT {
             cfg.depth,
             cfg.patch_size,
             cfg.out_channels,
-            use_flash_attn,
             vb.clone(),
         )?;
         let patch_embedder = PatchEmbedder::new(
@@ -176,7 +175,6 @@ impl MMDiTCore {
         num_heads: usize,
         patch_size: usize,
         out_channels: usize,
-        use_flash_attn: bool,
         vb: nn::VarBuilder,
     ) -> Result<Self> {
         let mut joint_blocks = Vec::with_capacity(depth - 1);
@@ -187,14 +185,12 @@ impl MMDiTCore {
                     Box::new(MMDiTXJointBlock::new(
                         hidden_size,
                         num_heads,
-                        use_flash_attn,
                         vb.pp(&joint_block_vb_pp),
                     )?)
                 } else {
                     Box::new(MMDiTJointBlock::new(
                         hidden_size,
                         num_heads,
-                        use_flash_attn,
                         vb.pp(&joint_block_vb_pp),
                     )?)
                 };

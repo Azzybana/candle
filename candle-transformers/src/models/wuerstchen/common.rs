@@ -174,7 +174,6 @@ impl AttnBlock {
         c_cond: usize,
         nhead: usize,
         self_attn: bool,
-        _use_flash_attn: bool,
         vb: VarBuilder,
     ) -> Result<Self> {
         let norm = WLayerNorm::new(c)?;
