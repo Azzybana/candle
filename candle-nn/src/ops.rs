@@ -82,100 +82,6 @@ impl candle::CustomOp1 for Sigmoid {
         Ok((storage, layout.shape().clone()))
     }
 
-    #[cfg(feature = "metal")]
-    fn metal_fwd(
-        &self,
-        storage: &candle::MetalStorage,
-        layout: &Layout,
-    ) -> Result<(candle::MetalStorage, Shape)> {
-        use candle::MetalError;
-        use candle::backend::BackendStorage;
-        let device = storage.device();
-        let dtype = storage.dtype();
-        let shape = layout.shape();
-        let el_count = shape.elem_count();
-        let buffer = device.new_buffer(el_count, dtype, "sigmoid")?;
-        let command_buffer = device.command_buffer()?;
-        command_buffer.set_label("sigmoid");
-        let src = candle_metal_kernels::BufferOffset {
-            buffer: storage.buffer(),
-            offset_in_bytes: layout.start_offset() * storage.dtype().size_in_bytes(),
-        };
-
-        match (el_count % 2, dtype, layout.is_contiguous()) {
-            (0, DType::BF16 | DType::F16, true) => {
-                use candle_metal_kernels::unary::contiguous_tiled;
-                let kernel_name = match dtype {
-                    DType::F16 => contiguous_tiled::sigmoid::HALF,
-                    DType::F32 => contiguous_tiled::sigmoid::FLOAT,
-                    DType::BF16 => contiguous_tiled::sigmoid::BFLOAT,
-                    dtype => {
-                        candle::bail!(
-                            "Metal contiguous_tiled unary sigmoid {dtype:?} not implemented"
-                        )
-                    }
-                };
-                candle_metal_kernels::call_unary_contiguous_tiled(
-                    device.metal_device(),
-                    &command_buffer,
-                    device.kernels(),
-                    kernel_name,
-                    el_count,
-                    src,
-                    &buffer,
-                )
-                .map_err(MetalError::from)?;
-            }
-            (_, _, true) => {
-                use candle_metal_kernels::unary::contiguous;
-                let kernel_name = match dtype {
-                    DType::F16 => contiguous::sigmoid::HALF,
-                    DType::F32 => contiguous::sigmoid::FLOAT,
-                    DType::BF16 => contiguous::sigmoid::BFLOAT,
-                    dtype => {
-                        candle::bail!("Metal contiguous unary sigmoid {dtype:?} not implemented")
-                    }
-                };
-                candle_metal_kernels::call_unary_contiguous(
-                    device.metal_device(),
-                    &command_buffer,
-                    device.kernels(),
-                    kernel_name,
-                    el_count,
-                    src,
-                    &buffer,
-                )
-                .map_err(MetalError::from)?;
-            }
-            (_, _, false) => {
-                use candle_metal_kernels::unary::strided;
-                let kernel_name = match dtype {
-                    DType::F16 => strided::sigmoid::HALF,
-                    DType::F32 => strided::sigmoid::FLOAT,
-                    DType::BF16 => strided::sigmoid::BFLOAT,
-                    dtype => {
-                        candle::bail!("Metal strided unary sigmoid {dtype:?} not implemented")
-                    }
-                };
-                let dst = candle_metal_kernels::BufferOffset::zero_offset(&buffer);
-                candle_metal_kernels::call_unary_strided(
-                    device.metal_device(),
-                    &command_buffer,
-                    device.kernels(),
-                    kernel_name,
-                    layout.dims(),
-                    src,
-                    layout.stride(),
-                    dst,
-                )
-                .map_err(MetalError::from)?;
-            }
-        }
-
-        let new_storage = candle::MetalStorage::new(buffer, device.clone(), el_count, dtype);
-        Ok((new_storage, layout.shape().clone()))
-    }
-
     fn bwd(&self, _arg: &Tensor, res: &Tensor, grad_res: &Tensor) -> Result<Option<Tensor>> {
         // d/dx sigmoid(x) = (1 - sigmoid(x)) * sigmoid(x)
         let d_dx_sigmoid = res.ones_like()?.sub(res)?.mul(res)?;
@@ -297,48 +203,6 @@ impl candle::CustomOp1 for SoftmaxLastDim {
             _ => candle::bail!("unsupported dtype for softmax {:?}", storage),
         }
     }
-
-    #[cfg(feature = "metal")]
-    fn metal_fwd(
-        &self,
-        storage: &candle::MetalStorage,
-        layout: &Layout,
-    ) -> Result<(candle::MetalStorage, Shape)> {
-        use candle::backend::BackendStorage;
-        let device = storage.device();
-        let command_buffer = device.command_buffer()?;
-        let kernels = device.kernels();
-        let name = match storage.dtype() {
-            DType::F32 => "softmax_f32",
-            DType::F16 => "softmax_f16",
-            DType::BF16 => "softmax_bf16",
-            dtype => candle::bail!("softmax-last-dim is not implemented for {dtype:?}"),
-        };
-
-        let n = layout.stride().len();
-        if !(layout.is_contiguous() && layout.stride()[n - 1] == 1) {
-            candle::bail!("Non contiguous softmax-last-dim is not implemented");
-        }
-
-        let last_dim = layout.dims()[layout.shape().rank() - 1];
-        let elem_count = layout.shape().elem_count();
-        let output = device.new_buffer(elem_count, storage.dtype(), "softmax")?;
-        candle_metal_kernels::call_last_softmax(
-            device.metal_device(),
-            &command_buffer,
-            kernels,
-            name,
-            elem_count,
-            last_dim,
-            storage.buffer(),
-            layout.start_offset() * storage.dtype().size_in_bytes(),
-            &output,
-        )
-        .map_err(candle::Error::wrap)?;
-        let newstorage =
-            candle::MetalStorage::new(output, device.clone(), elem_count, storage.dtype());
-        Ok((newstorage, layout.shape().clone()))
-    }
 }
 
 pub fn softmax_last_dim(xs: &Tensor) -> Result<Tensor> {
@@ -416,51 +280,6 @@ impl candle::CustomOp2 for RmsNorm {
             (C::F32(s1), C::F32(s2)) => inner::<f32>(s1, l1, s2, l2, eps),
             _ => candle::bail!("unsupported dtype for rmsnorm {:?}", s1.dtype()),
         }
-    }
-
-    #[cfg(feature = "metal")]
-    fn metal_fwd(
-        &self,
-        s1: &candle::MetalStorage,
-        l1: &Layout,
-        s2: &candle::MetalStorage,
-        l2: &Layout,
-    ) -> Result<(candle::MetalStorage, Shape)> {
-        use candle::backend::BackendStorage;
-        let device = s1.device();
-        let command_buffer = device.command_buffer()?;
-        let kernels = device.kernels();
-        let name = match (s1.dtype(), s2.dtype()) {
-            (DType::F32, DType::F32) => "rmsnorm_f32",
-            (DType::F16, DType::F16) => "rmsnorm_f16",
-            (DType::BF16, DType::BF16) => "rmsnorm_bf16",
-            (dt1, dt2) => candle::bail!("rmsnorm is not implemented for {dt1:?} {dt2:?}"),
-        };
-
-        if !(l1.is_contiguous() && l2.is_contiguous()) {
-            candle::bail!("Non contiguous rmsnorm is not implemented");
-        }
-
-        let last_dim = l1.dims()[l1.shape().rank() - 1];
-        let elem_count = l1.shape().elem_count();
-        let output = device.new_buffer(elem_count, s1.dtype(), "rmsnorm")?;
-        candle_metal_kernels::call_rms_norm(
-            device.metal_device(),
-            &command_buffer,
-            kernels,
-            name,
-            elem_count,
-            last_dim,
-            self.eps,
-            s1.buffer(),
-            l1.start_offset() * s1.dtype().size_in_bytes(),
-            s2.buffer(),
-            l2.start_offset() * s2.dtype().size_in_bytes(),
-            &output,
-        )
-        .map_err(candle::Error::wrap)?;
-        let newstorage = candle::MetalStorage::new(output, device.clone(), elem_count, s1.dtype());
-        Ok((newstorage, l1.shape().clone()))
     }
 }
 
@@ -577,57 +396,6 @@ impl candle::CustomOp3 for LayerNorm {
             (C::F32(s1), C::F32(s2), C::F32(s3)) => inner::<f32>(s1, l1, s2, l2, s3, l3, eps),
             _ => candle::bail!("unsupported dtype for rmsnorm {:?}", s1.dtype()),
         }
-    }
-
-    #[cfg(feature = "metal")]
-    fn metal_fwd(
-        &self,
-        s1: &candle::MetalStorage,
-        l1: &Layout,
-        s2: &candle::MetalStorage,
-        l2: &Layout,
-        s3: &candle::MetalStorage,
-        l3: &Layout,
-    ) -> Result<(candle::MetalStorage, Shape)> {
-        use candle::backend::BackendStorage;
-        let device = s1.device();
-        let command_buffer = device.command_buffer()?;
-        let kernels = device.kernels();
-        let name = match (s1.dtype(), s2.dtype(), s3.dtype()) {
-            (DType::F32, DType::F32, DType::F32) => "layernorm_f32",
-            (DType::F16, DType::F16, DType::F16) => "layernorm_f16",
-            (DType::BF16, DType::BF16, DType::BF16) => "layernorm_bf16",
-            (dt1, dt2, dt3) => {
-                candle::bail!("layernorm is not implemented for {dt1:?} {dt2:?} {dt3:?}")
-            }
-        };
-
-        if !(l1.is_contiguous() && l2.is_contiguous() && l3.is_contiguous()) {
-            candle::bail!("Non contiguous layernorm is not implemented");
-        }
-
-        let last_dim = l1.dims()[l1.shape().rank() - 1];
-        let elem_count = l1.shape().elem_count();
-        let output = device.new_buffer(elem_count, s1.dtype(), "layernorm")?;
-        candle_metal_kernels::call_layer_norm(
-            device.metal_device(),
-            &command_buffer,
-            kernels,
-            name,
-            elem_count,
-            last_dim,
-            self.eps,
-            s1.buffer(),
-            l1.start_offset() * s1.dtype().size_in_bytes(),
-            s2.buffer(),
-            l2.start_offset() * s2.dtype().size_in_bytes(),
-            s3.buffer(),
-            l3.start_offset() * s3.dtype().size_in_bytes(),
-            &output,
-        )
-        .map_err(candle::Error::wrap)?;
-        let newstorage = candle::MetalStorage::new(output, device.clone(), elem_count, s1.dtype());
-        Ok((newstorage, l1.shape().clone()))
     }
 }
 

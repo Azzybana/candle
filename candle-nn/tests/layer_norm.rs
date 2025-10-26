@@ -1,11 +1,8 @@
 #[cfg(feature = "mkl")]
 extern crate intel_mkl_src;
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
 use anyhow::Result;
-use candle::{test_utils, Device, Tensor};
+use candle::{Device, Tensor, test_utils};
 use candle_nn::{LayerNorm, Module};
 
 #[test]

@@ -2,11 +2,8 @@
 #[cfg(feature = "mkl")]
 extern crate intel_mkl_src;
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
 use candle::quantized::GgmlType;
-use candle::{CpuStorage, Device, Layout, Module, Result, Shape, Tensor, D};
+use candle::{CpuStorage, D, Device, Layout, Module, Result, Shape, Tensor};
 use clap::{Parser, Subcommand};
 
 const CHECK_CONV2D: bool = false;
