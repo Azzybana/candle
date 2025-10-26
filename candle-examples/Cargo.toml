@@ -52,7 +52,7 @@ anyhow = { workspace = true }
 hf-hub = { workspace = true, features = ["tokio"] }
 
 [features]
-default = []
+default = ["onnx", "buildtime-download"]
 onnx = ["candle-onnx"]                           # Enable ONNX support
 microphone = ["cpal", "rubato"]                  # Enable microphone input
 encodec = ["cpal", "symphonia", "rubato"]        # Enable EnCodec
