@@ -423,14 +423,14 @@ impl Content {
 
             let mut dimensions: Vec<usize> = match magic {
                 VersionedMagic::GgufV1 => {
-                    let mut dimensions = vec![0; n_dimensions as usize];
-                    reader.read_u32_into::<LittleEndian>(&mut dimensions)?;
-                    dimensions.into_iter().map(|c| c as usize).collect()
+                    let mut dims_u32 = vec![0u32; n_dimensions as usize];
+                    reader.read_u32_into::<LittleEndian>(&mut dims_u32)?;
+                    dims_u32.into_iter().map(|c| c as usize).collect()
                 }
                 VersionedMagic::GgufV2 | VersionedMagic::GgufV3 => {
-                    let mut dimensions = vec![0; n_dimensions as usize];
-                    reader.read_u64_into::<LittleEndian>(&mut dimensions)?;
-                    dimensions.into_iter().map(|c| c as usize).collect()
+                    let mut dims_u64 = vec![0u64; n_dimensions as usize];
+                    reader.read_u64_into::<LittleEndian>(&mut dims_u64)?;
+                    dims_u64.into_iter().map(|c| c as usize).collect()
                 }
             };
 
