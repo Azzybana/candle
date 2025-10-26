@@ -24,6 +24,5 @@
     - [Serialization]()
 - [Using MKL]()
 - [Creating apps]()
-    - [Creating a WASM app]()
     - [Creating a REST api webserver]()
     - [Creating a desktop Tauri app]()

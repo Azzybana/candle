@@ -49,4 +49,4 @@ let _guard = {
 
 ## GPU
 
-When using Metal or other asynchronous GPU backends, tracing may produce misleading timing data because operations are queued rather than executed immediately.
+When using asynchronous GPU backends, tracing may produce misleading timing data because operations are queued rather than executed immediately.

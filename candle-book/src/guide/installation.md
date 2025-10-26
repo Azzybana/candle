@@ -25,16 +25,6 @@ Add the `candle-core` crate with the mkl feature:
 cargo add --git https://github.com/huggingface/candle.git candle-core --features "mkl"
 ```
 
-### Metal
-
-Metal is exclusive to MacOS.
-
-Add the `candle-core` crate with the metal feature:
-
-```bash
-cargo add --git https://github.com/huggingface/candle.git candle-core --features "metal"
-```
-
 ## 3. Building
 
 Run `cargo build` to make sure everything can be correctly built.
