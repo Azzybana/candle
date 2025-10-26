@@ -15,7 +15,6 @@ pub struct VoxtralLlamaConfig {
     pub num_attention_heads: usize,
     pub num_key_value_heads: usize,
     pub head_dim: Option<usize>, // explicit head_dim from config
-    pub use_flash_attn: bool,
     pub rms_norm_eps: f64,
     pub rope_theta: f32,
     pub max_position_embeddings: usize,
@@ -33,7 +32,6 @@ impl VoxtralLlamaConfig {
             num_attention_heads: 32,
             num_key_value_heads: 8,
             head_dim: Some(128), // Voxtral uses explicit head_dim=128
-            use_flash_attn: true,
             rms_norm_eps: 1e-5,
             rope_theta: 100_000_000.0,
             max_position_embeddings: 131072,
@@ -51,7 +49,6 @@ impl VoxtralLlamaConfig {
             num_attention_heads: 32,
             num_key_value_heads: 8,
             head_dim: Some(128), // Voxtral uses explicit head_dim=128
-            use_flash_attn: true,
             rms_norm_eps: 1e-5,
             rope_theta: 100_000_000.0,
             max_position_embeddings: 131072,
@@ -133,26 +130,9 @@ struct CausalSelfAttention {
     num_attention_heads: usize,
     num_key_value_heads: usize,
     head_dim: usize,
-    use_flash_attn: bool,
     span: tracing::Span,
     span_rot: tracing::Span,
     max_position_embeddings: usize,
-}
-
-#[cfg(feature = "flash-attn")]
-fn flash_attn(
-    q: &Tensor,
-    k: &Tensor,
-    v: &Tensor,
-    softmax_scale: f32,
-    causal: bool,
-) -> Result<Tensor> {
-    candle_flash_attn::flash_attn(q, k, v, softmax_scale, causal)
-}
-
-#[cfg(not(feature = "flash-attn"))]
-fn flash_attn(_: &Tensor, _: &Tensor, _: &Tensor, _: f32, _: bool) -> Result<Tensor> {
-    unimplemented!("compile with '--features flash-attn'")
 }
 
 impl CausalSelfAttention {
@@ -242,14 +222,7 @@ impl CausalSelfAttention {
         let k = self.repeat_kv(k)?;
         let v = self.repeat_kv(v)?;
 
-        let y = if self.use_flash_attn {
-            // flash-attn expects (b_sz, seq_len, nheads, head_dim)
-            let q = q.transpose(1, 2)?;
-            let k = k.transpose(1, 2)?;
-            let v = v.transpose(1, 2)?;
-            let softmax_scale = 1f32 / (self.head_dim as f32).sqrt();
-            flash_attn(&q, &k, &v, softmax_scale, seq_len > 1)?.transpose(1, 2)?
-        } else {
+        let y = {
             let in_dtype = q.dtype();
             let q = q.to_dtype(DType::F32)?;
             let k = k.to_dtype(DType::F32)?;
@@ -303,7 +276,6 @@ impl CausalSelfAttention {
             num_attention_heads: cfg.num_attention_heads,
             num_key_value_heads: cfg.num_key_value_heads,
             head_dim, // use the calculated head_dim from above
-            use_flash_attn: cfg.use_flash_attn,
             span,
             span_rot,
             max_position_embeddings: cfg.max_position_embeddings,

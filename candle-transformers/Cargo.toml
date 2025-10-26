@@ -15,7 +15,6 @@ path = "src/lib.rs"
 crate-type = ["rlib"]
 
 [features]
-flash-attn = []
 
 [dependencies]
 byteorder = { workspace = true }

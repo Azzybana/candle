@@ -26,15 +26,6 @@
 //! cargo run --example stable-diffusion --release \
 //!     -- --prompt "a cosmonaut on a horse (hd, realistic, high-def)" \
 //!     --sd-version turbo
-//!
-//! # with flash attention.
-//! # feature flag: `--features flash-attn`
-//! # cli flag: `--use-flash-attn`.
-//! # flash-attention-v2 is only compatible with Ampere, Ada, \
-//! # or Hopper GPUs (e.g., A100/H100, RTX 3090/4090).
-//! cargo run --example stable-diffusion --release \
-//!     -- --prompt "a cosmonaut on a horse (hd, realistic, high-def)" \
-//!     --use-flash-attn
 //! ```
 
 pub mod attention;
@@ -476,18 +467,12 @@ impl StableDiffusionConfig {
         unet_weights: P,
         device: &Device,
         in_channels: usize,
-        use_flash_attn: bool,
         dtype: DType,
     ) -> Result<unet_2d::UNet2DConditionModel> {
         let vs_unet =
             unsafe { nn::VarBuilder::from_mmaped_safetensors(&[unet_weights], dtype, device)? };
-        let unet = unet_2d::UNet2DConditionModel::new(
-            vs_unet,
-            in_channels,
-            4,
-            use_flash_attn,
-            self.unet.clone(),
-        )?;
+        let unet =
+            unet_2d::UNet2DConditionModel::new(vs_unet, in_channels, 4, false, self.unet.clone())?;
         Ok(unet)
     }
 
@@ -496,18 +481,11 @@ impl StableDiffusionConfig {
         unet_weight_files: &[P],
         device: &Device,
         in_channels: usize,
-        use_flash_attn: bool,
         dtype: DType,
     ) -> Result<unet_2d::UNet2DConditionModel> {
         let vs_unet =
             unsafe { nn::VarBuilder::from_mmaped_safetensors(unet_weight_files, dtype, device)? };
-        unet_2d::UNet2DConditionModel::new(
-            vs_unet,
-            in_channels,
-            4,
-            use_flash_attn,
-            self.unet.clone(),
-        )
+        unet_2d::UNet2DConditionModel::new(vs_unet, in_channels, 4, false, self.unet.clone())
     }
 
     pub fn build_scheduler(&self, n_steps: usize) -> Result<Box<dyn Scheduler>> {

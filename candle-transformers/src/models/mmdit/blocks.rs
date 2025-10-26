@@ -440,22 +440,6 @@ fn flash_compatible_attention(
     attn_scores.reshape(q_dims_for_matmul)?.transpose(1, 2)
 }
 
-#[cfg(feature = "flash-attn")]
-fn flash_attn(
-    q: &Tensor,
-    k: &Tensor,
-    v: &Tensor,
-    softmax_scale: f32,
-    causal: bool,
-) -> Result<Tensor> {
-    candle_flash_attn::flash_attn(q, k, v, softmax_scale, causal)
-}
-
-#[cfg(not(feature = "flash-attn"))]
-fn flash_attn(_: &Tensor, _: &Tensor, _: &Tensor, _: f32, _: bool) -> Result<Tensor> {
-    unimplemented!("compile with '--features flash-attn'")
-}
-
 fn joint_attn(
     context_qkv: &Qkv,
     x_qkv: &Qkv,

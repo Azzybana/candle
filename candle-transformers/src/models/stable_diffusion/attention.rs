@@ -61,21 +61,7 @@ impl Module for FeedForward {
     }
 }
 
-#[cfg(feature = "flash-attn")]
-fn flash_attn(
-    q: &Tensor,
-    k: &Tensor,
-    v: &Tensor,
-    softmax_scale: f32,
-    causal: bool,
-) -> Result<Tensor> {
-    candle_flash_attn::flash_attn(q, k, v, softmax_scale, causal)
-}
 
-#[cfg(not(feature = "flash-attn"))]
-fn flash_attn(_: &Tensor, _: &Tensor, _: &Tensor, _: f32, _: bool) -> Result<Tensor> {
-    unimplemented!("compile with '--features flash-attn'")
-}
 
 #[derive(Debug)]
 pub struct CrossAttention {
@@ -89,7 +75,6 @@ pub struct CrossAttention {
     span: tracing::Span,
     span_attn: tracing::Span,
     span_softmax: tracing::Span,
-    use_flash_attn: bool,
 }
 
 impl CrossAttention {
@@ -101,7 +86,6 @@ impl CrossAttention {
         heads: usize,
         dim_head: usize,
         slice_size: Option<usize>,
-        use_flash_attn: bool,
     ) -> Result<Self> {
         let inner_dim = dim_head * heads;
         let context_dim = context_dim.unwrap_or(query_dim);
@@ -124,7 +108,6 @@ impl CrossAttention {
             span,
             span_attn,
             span_softmax,
-            use_flash_attn,
         })
     }
 
@@ -172,36 +155,16 @@ impl CrossAttention {
 
     fn attention(&self, query: &Tensor, key: &Tensor, value: &Tensor) -> Result<Tensor> {
         let _enter = self.span_attn.enter();
-        let xs = if self.use_flash_attn {
-            let init_dtype = query.dtype();
-            let q = query
-                .to_dtype(candle::DType::F16)?
-                .unsqueeze(0)?
-                .transpose(1, 2)?;
-            let k = key
-                .to_dtype(candle::DType::F16)?
-                .unsqueeze(0)?
-                .transpose(1, 2)?;
-            let v = value
-                .to_dtype(candle::DType::F16)?
-                .unsqueeze(0)?
-                .transpose(1, 2)?;
-            flash_attn(&q, &k, &v, self.scale as f32, false)?
-                .transpose(1, 2)?
-                .squeeze(0)?
-                .to_dtype(init_dtype)?
-        } else {
-            let in_dtype = query.dtype();
-            let query = query.to_dtype(DType::F32)?;
-            let key = key.to_dtype(DType::F32)?;
-            let value = value.to_dtype(DType::F32)?;
-            let xs = query.matmul(&(key.t()? * self.scale)?)?;
-            let xs = {
-                let _enter = self.span_softmax.enter();
-                nn::ops::softmax_last_dim(&xs)?
-            };
-            xs.matmul(&value)?.to_dtype(in_dtype)?
+        let in_dtype = query.dtype();
+        let query = query.to_dtype(DType::F32)?;
+        let key = key.to_dtype(DType::F32)?;
+        let value = value.to_dtype(DType::F32)?;
+        let xs = query.matmul(&(key.t()? * self.scale)?)?;
+        let xs = {
+            let _enter = self.span_softmax.enter();
+            nn::ops::softmax_last_dim(&xs)?
         };
+        let xs = xs.matmul(&value)?.to_dtype(in_dtype)?;
         self.reshape_batch_dim_to_heads(&xs)
     }
 
@@ -250,7 +213,6 @@ impl BasicTransformerBlock {
         d_head: usize,
         context_dim: Option<usize>,
         sliced_attention_size: Option<usize>,
-        use_flash_attn: bool,
     ) -> Result<Self> {
         let attn1 = CrossAttention::new(
             vs.pp("attn1"),
@@ -259,7 +221,6 @@ impl BasicTransformerBlock {
             n_heads,
             d_head,
             sliced_attention_size,
-            use_flash_attn,
         )?;
         let ff = FeedForward::new(vs.pp("ff"), dim, None, 4)?;
         let attn2 = CrossAttention::new(
@@ -269,7 +230,6 @@ impl BasicTransformerBlock {
             n_heads,
             d_head,
             sliced_attention_size,
-            use_flash_attn,
         )?;
         let norm1 = nn::layer_norm(dim, 1e-5, vs.pp("norm1"))?;
         let norm2 = nn::layer_norm(dim, 1e-5, vs.pp("norm2"))?;
@@ -338,7 +298,6 @@ impl SpatialTransformer {
         in_channels: usize,
         n_heads: usize,
         d_head: usize,
-        use_flash_attn: bool,
         config: SpatialTransformerConfig,
     ) -> Result<Self> {
         let inner_dim = n_heads * d_head;
@@ -364,7 +323,6 @@ impl SpatialTransformer {
                 d_head,
                 config.context_dim,
                 config.sliced_attention_size,
-                use_flash_attn,
             )?;
             transformer_blocks.push(tb)
         }
