@@ -93,5 +93,5 @@ lto = "fat"
 codegen-units = 1
 panic = "abort"
 strip = true
-rustflags = ["-C", "relocation-model=static", "-C", "relro-level=off"]
+# rustflags = ["-C", "relocation-model=static", "-C", "relro-level=off"]
 overflow-checks = false
