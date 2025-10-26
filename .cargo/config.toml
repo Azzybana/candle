@@ -17,6 +17,7 @@ rustflags = ["-C", "target-cpu=native", "-Z", "tune-cpu=native"]
 [env]
 RUST_BACKTRACE = "full"
 MIRIFLAGS = "-Zmiri-disable-isolation -Zmiri-ignore-leaks"
+
 [alias]
 test = "nextest run --config .cargo/nextest.toml"
 cov = "llvm-cov nextest --config .cargo/nextest.toml"
