@@ -1,5 +1,4 @@
 /// This example contains some simple benchmarks so that it's easy to run them in perf etc.
-
 use candle::quantized::GgmlType;
 use candle::{CpuStorage, D, Device, Layout, Module, Result, Shape, Tensor};
 use clap::{Parser, Subcommand};

@@ -4,8 +4,8 @@ use candle::{Device, Result, Storage, Tensor, WithDType};
 use std::sync::LazyLock;
 use std::{f32, iter::Sum};
 
-use rayon::prelude::*;
 use rayon::ThreadPool;
+use rayon::prelude::*;
 
 #[cfg(target_os = "macos")]
 /// Elevate the thread QoS so macOS prefers running it on Performance (P) cores.
@@ -86,36 +86,23 @@ where
 {
     // Inline CPU slice extraction for q, k, v, and optional mask
     let (q_guard, q_layout) = q.storage_and_layout();
-    let q_data: &[T] = if let Storage::Cpu(cpu) = &*q_guard {
-        let data = cpu.as_slice::<T>()?;
-        &data[q_layout.start_offset()..]
-    } else {
-        return Err(candle::Error::Msg("Expected CPU storage for q".into()));
-    };
+    let Storage::Cpu(cpu) = &*q_guard;
+    let data = cpu.as_slice::<T>()?;
+    let q_data = &data[q_layout.start_offset()..];
     let (k_guard, k_layout) = k.storage_and_layout();
-    let k_data: &[T] = if let Storage::Cpu(cpu) = &*k_guard {
-        let data = cpu.as_slice::<T>()?;
-        &data[k_layout.start_offset()..]
-    } else {
-        return Err(candle::Error::Msg("Expected CPU storage for k".into()));
-    };
+    let Storage::Cpu(cpu) = &*k_guard;
+    let data = cpu.as_slice::<T>()?;
+    let k_data = &data[k_layout.start_offset()..];
     let (v_guard, v_layout) = v.storage_and_layout();
-    let v_data: &[T] = if let Storage::Cpu(cpu) = &*v_guard {
-        let data = cpu.as_slice::<T>()?;
-        &data[v_layout.start_offset()..]
-    } else {
-        return Err(candle::Error::Msg("Expected CPU storage for v".into()));
-    };
+    let Storage::Cpu(cpu) = &*v_guard;
+    let data = cpu.as_slice::<T>()?;
+    let v_data = &data[v_layout.start_offset()..];
     let mask_guard = mask.map(|mask| mask.storage_and_layout().0);
     let mask_data: Option<&[T]> = if let Some(mask_guard) = &mask_guard {
         let mask = mask.as_ref().unwrap();
-
-        if let Storage::Cpu(cpu) = &**mask_guard {
-            let data = cpu.as_slice::<T>()?;
-            Some(&data[mask.layout().start_offset()..])
-        } else {
-            return Err(candle::Error::Msg("Expected CPU storage for mask".into()));
-        }
+        let Storage::Cpu(cpu) = &**mask_guard;
+        let data = cpu.as_slice::<T>()?;
+        Some(&data[mask.layout().start_offset()..])
     } else {
         None
     };

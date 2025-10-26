@@ -2,7 +2,7 @@ use crate::onnx::attribute_proto::AttributeType;
 use crate::onnx::tensor_proto::DataType;
 use crate::onnx::{self, GraphProto};
 use candle::Module;
-use candle::{bail, DType, Device, Result, Tensor};
+use candle::{DType, Device, Result, Tensor, bail};
 use candle_nn::activation::PReLU;
 use std::collections::{HashMap, HashSet};
 
@@ -465,13 +465,15 @@ fn simple_eval_(
                     Some(s) => bail!("unsupported auto_pad {s}"),
                 };
                 if let Some(d) = dilations
-                    && d.iter().any(|&v| v != 1) {
-                        bail!("MaxPool with dilation != 1, {dilations:?}")
-                    }
+                    && d.iter().any(|&v| v != 1)
+                {
+                    bail!("MaxPool with dilation != 1, {dilations:?}")
+                }
                 if let Some(d) = pads
-                    && d.iter().any(|&v| v != 0) {
-                        bail!("MaxPool with pads != 0, {pads:?}")
-                    }
+                    && d.iter().any(|&v| v != 0)
+                {
+                    bail!("MaxPool with pads != 0, {pads:?}")
+                }
                 let xs = get(&node.input[0])?;
                 let (k1, k2) = match kernel_shape {
                     [k1, k2] => (*k1 as usize, *k2 as usize),
@@ -498,13 +500,15 @@ fn simple_eval_(
                     Some(s) => bail!("unsupported auto_pad {s}"),
                 };
                 if let Some(d) = dilations
-                    && d.iter().any(|&v| v != 1) {
-                        bail!("AvgPool with dilation != 1, {dilations:?}")
-                    }
+                    && d.iter().any(|&v| v != 1)
+                {
+                    bail!("AvgPool with dilation != 1, {dilations:?}")
+                }
                 if let Some(d) = pads
-                    && d.iter().any(|&v| v != 0) {
-                        bail!("AvgPool with pads != 0, {pads:?}")
-                    }
+                    && d.iter().any(|&v| v != 0)
+                {
+                    bail!("AvgPool with pads != 0, {pads:?}")
+                }
                 let xs = get(&node.input[0])?;
                 let (k1, k2) = match kernel_shape {
                     [k1, k2] => (*k1 as usize, *k2 as usize),
@@ -685,7 +689,11 @@ fn simple_eval_(
 
                 let rank = data.rank();
                 if rank != indices.rank() {
-                    bail!("indices must have same rank as input data. Data rank [{}] != indices rank [{}]", data.rank(), indices.rank());
+                    bail!(
+                        "indices must have same rank as input data. Data rank [{}] != indices rank [{}]",
+                        data.rank(),
+                        indices.rank()
+                    );
                 }
 
                 let axis = {
@@ -1128,7 +1136,11 @@ fn simple_eval_(
                     bail!("Pad expects 'pads' input to be 1D vector: {pads:?}");
                 }
                 if pads.dim(0).unwrap() != 2 * data.rank() {
-                    bail!("Pad expects 'pads' input len to be 2 * rank of 'data' input: pads: {}, data rank: {}", pads, data.rank());
+                    bail!(
+                        "Pad expects 'pads' input len to be 2 * rank of 'data' input: pads: {}, data rank: {}",
+                        pads,
+                        data.rank()
+                    );
                 }
 
                 let pads = pads.to_vec1::<i64>()?;
@@ -1587,8 +1599,8 @@ fn simple_eval_(
             }
             random_type @ ("RandomUniform" | "RandomNormal") => {
                 let dt: i64 = get_attr_opt(node, "dtype")?.copied().unwrap_or(1); // 1 is float
-                                                                                  // type by
-                                                                                  // default
+                // type by
+                // default
                 let dtype = match DataType::try_from(dt as i32) {
                     Ok(dt) => match dtype(dt) {
                         Some(DType::U8 | DType::U32 | DType::I64) => {
@@ -1746,7 +1758,9 @@ fn simple_eval_(
                 let activations = get_attr_opt_owned::<Vec<String>>(node, "activations")?
                     .unwrap_or(activations_default.clone());
                 if activations != activations_default {
-                    bail!("LSTM currently only supports default activations ({activations_default:?})");
+                    bail!(
+                        "LSTM currently only supports default activations ({activations_default:?})"
+                    );
                 }
                 // activation_alpha and activation_beta don't apply to (Sigmoid, Tanh, Tanh) so ignoring them is okay
                 if get_attr_opt::<f32>(node, "clip")?.is_some() {
@@ -1901,7 +1915,13 @@ fn simple_eval_(
                 )?;
 
                 let mut lstm_state = candle_nn::rnn::LSTMState::new(h, c);
-                let mut h_acc = if !node.output.first().map(String::as_str).unwrap_or("").is_empty() {
+                let mut h_acc = if !node
+                    .output
+                    .first()
+                    .map(String::as_str)
+                    .unwrap_or("")
+                    .is_empty()
+                {
                     Some(vec![])
                 } else {
                     None
@@ -1914,7 +1934,10 @@ fn simple_eval_(
                     }
                 }
 
-                assert_eq!(num_directions, 1, "if support for bidirectional is ever added, outputs will have to be concatenated, not simply reshaped");
+                assert_eq!(
+                    num_directions, 1,
+                    "if support for bidirectional is ever added, outputs will have to be concatenated, not simply reshaped"
+                );
                 if let Some(name) = node.output.first() {
                     let h_acc = h_acc.as_ref().unwrap();
                     let h_acc = lstm.states_to_tensor(h_acc)?;
@@ -2023,7 +2046,10 @@ fn simple_eval_(
                 let seq_lens_is_default =
                     (seq_lens.to_vec1::<i64>()?.iter()).all(|e| *e as usize == seq_length);
                 if !seq_lens_is_default {
-                    bail!("RNN currently does not support variable-length sequences. All sequences must use the full sequence length of {}", seq_length);
+                    bail!(
+                        "RNN currently does not support variable-length sequences. All sequences must use the full sequence length of {}",
+                        seq_length
+                    );
                 }
 
                 // Optional initial value of the hidden. If not specified - assumed to be 0.
@@ -2428,7 +2454,7 @@ fn simple_eval_(
                                 flat_output = flat_output.slice_scatter(&new_value, 0, flat_idx)?;
                             }
                         }
-                        "none" | _ => {
+                        _ => {
                             if update_element_shape.is_empty() {
                                 flat_output = flat_output.slice_scatter(
                                     &update_slice.unsqueeze(0)?,

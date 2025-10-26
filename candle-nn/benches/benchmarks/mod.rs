@@ -30,8 +30,7 @@ struct BenchDeviceHandler {
 
 impl BenchDeviceHandler {
     pub fn new() -> Result<Self> {
-        let mut devices = Vec::new();
-        devices.push(Device::Cpu);
+        let devices = vec![Device::Cpu];
         Ok(Self { devices })
     }
 }

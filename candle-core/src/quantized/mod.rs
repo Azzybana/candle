@@ -64,12 +64,9 @@ impl QStorage {
     }
 
     fn quantize(&mut self, src: &Storage) -> Result<()> {
-        match (self, src) {
-            (QStorage::Cpu(storage), Storage::Cpu(src)) => {
-                storage.from_float(src.as_slice::<f32>()?);
-            }
-            _ => crate::bail!("Invalid dequantize storage locations do not match"),
-        }
+        let QStorage::Cpu(storage) = self;
+        let Storage::Cpu(src) = src;
+        storage.from_float(src.as_slice::<f32>()?);
         Ok(())
     }
 
