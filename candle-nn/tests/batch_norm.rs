@@ -1,5 +1,3 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use anyhow::Result;
 use candle::{DType, Device, Tensor, test_utils};

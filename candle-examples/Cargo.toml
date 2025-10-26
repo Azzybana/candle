@@ -10,7 +10,6 @@ license.workspace = true
 readme = "README.md"
 
 [dependencies]
-#accelerate-src = { workspace = true, optional = true }
 candle = { workspace = true }
 candle-datasets = { workspace = true, optional = true }
 candle-nn = { workspace = true }
@@ -21,11 +20,9 @@ csv = { workspace = true }
 half = { workspace = true, optional = true }
 hf-hub = { workspace = true, features = ["tokio"] }
 image = { workspace = true }
-intel-mkl-src = { workspace = true, optional = true }
 num-traits = { workspace = true }
 palette = { workspace = true, optional = true }
 enterpolation = { workspace = true, optional = true }
-#pyo3 = { workspace = true, optional = true }
 rayon = { workspace = true }
 rubato = { workspace = true, optional = true }
 safetensors = { workspace = true }
@@ -57,20 +54,14 @@ hf-hub = { workspace = true, features = ["tokio"] }
 
 [features]
 default = []
-mkl = [
-    "dep:intel-mkl-src",
-    "candle/mkl",
-    "candle-nn/mkl",
-    "candle-transformers/mkl",
-] # Use Intel MKL for BLAS
-onnx = ["candle-onnx"] # Enable ONNX support
-microphone = ["cpal", "rubato"] # Enable microphone input
-encodec = ["cpal", "symphonia", "rubato"] # Enable EnCodec
-mimi = ["cpal", "symphonia", "rubato"] # Enable Mimi
-snac = ["cpal", "symphonia", "rubato"] # Enable SNAC
+onnx = ["candle-onnx"]                           # Enable ONNX support
+microphone = ["cpal", "rubato"]                  # Enable microphone input
+encodec = ["cpal", "symphonia", "rubato"]        # Enable EnCodec
+mimi = ["cpal", "symphonia", "rubato"]           # Enable Mimi
+snac = ["cpal", "symphonia", "rubato"]           # Enable SNAC
 depth_anything_v2 = ["palette", "enterpolation"] # Enable Depth Anything V2
-tekken = ["tekken-rs"] # Enable Tekken
-buildtime-download = [] # Enable build-time downloads
+tekken = ["tekken-rs"]                           # Enable Tekken
+buildtime-download = []                          # Enable build-time downloads
 
 [[example]]
 name = "onnx"

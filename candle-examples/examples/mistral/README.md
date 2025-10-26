@@ -45,7 +45,7 @@ This example is released under the terms
 ## Running the quantized version of the model
 
 ```bash
-$ cargo run --example mistral --features accelerate --release -- \
+$ cargo run --example mistral --release -- \
 $   --prompt "Here is a sample quick sort implementation in rust " --quantized -n 400
 avx: false, neon: true, simd128: false, f16c: false
 temp: 0.00 repeat-penalty: 1.10 repeat-last-n: 64

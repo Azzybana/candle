@@ -28,7 +28,7 @@ def print_prime(n: int):  # n is the number of primes to be printed
 The qwen3 MoE variant is also an option.
 
 ```bash
-$ cargo run --example qwen --features metal --release  -- --prompt "Write a poem about butterflies. <think></think>." --model "3-moe-a3b"
+$ cargo run --example qwen --cpu --release  -- --prompt "Write a poem about butterflies. <think></think>." --model "3-moe-a3b"
 > In morning's hush, where daisies sleep,  
 > A fleeting dance through sunlit deep—  
 > They flutter soft on gossamer thread,  

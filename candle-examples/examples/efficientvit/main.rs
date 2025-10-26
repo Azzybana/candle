@@ -1,12 +1,7 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 use clap::{Parser, ValueEnum};
 
-use candle::{DType, IndexOp, D};
+use candle::{D, DType, IndexOp};
 use candle_nn::{Module, VarBuilder};
 use candle_transformers::models::efficientvit;
 

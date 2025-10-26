@@ -1,17 +1,12 @@
 // TODO: Add an offline mode.
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use anyhow::{Error as E, Result};
 use candle::{DType, Device, Tensor};
 use candle_nn::VarBuilder;
 use candle_transformers::generation::LogitsProcessor;
 use clap::Parser;
-use hf_hub::{api::sync::Api, Repo, RepoType};
+use hf_hub::{Repo, RepoType, api::sync::Api};
 use tokenizers::Tokenizer;
 
 use candle_transformers::models::falcon::{Config, Falcon};

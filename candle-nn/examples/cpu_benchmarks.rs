@@ -1,6 +1,4 @@
 /// This example contains some simple benchmarks so that it's easy to run them in perf etc.
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use candle::quantized::GgmlType;
 use candle::{CpuStorage, D, Device, Layout, Module, Result, Shape, Tensor};

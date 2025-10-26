@@ -8,7 +8,7 @@ DeepSeek V2 an MoE model featuring MLA (Multi-Latent Attention). There is a lite
 ## Running the example
 
 ```bash
-$ cargo run --example deepseekv2 --release --features metal -- --prompt "Recursive fibonacci code in Rust:" --which lite --sample-len 150  
+$ cargo run --example deepseekv2 --release --cpu -- --prompt "Recursive fibonacci code in Rust:" --which lite --sample-len 150  
 
 fn fibonacci(n: u32) -> u32 {
     if n <= 1 {

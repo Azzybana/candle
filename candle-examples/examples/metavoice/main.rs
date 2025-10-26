@@ -1,9 +1,3 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
 use anyhow::Result;
 use clap::Parser;
 use std::io::Write;
@@ -16,7 +10,7 @@ use candle_transformers::models::quantized_metavoice::transformer as qtransforme
 use candle::{DType, IndexOp, Tensor};
 use candle_nn::VarBuilder;
 use hf_hub::api::sync::Api;
-use rand::{distr::Distribution, SeedableRng};
+use rand::{SeedableRng, distr::Distribution};
 
 pub const ENCODEC_NTOKENS: u32 = 1024;
 
@@ -168,11 +162,7 @@ fn main() -> Result<()> {
     let second_stage_config = gpt::Config::cfg1b_v0_1();
     let second_stage_model = gpt::Model::new(second_stage_config.clone(), second_stage_vb)?;
 
-    let encodec_device = if device.is_metal() {
-        &candle::Device::Cpu
-    } else {
-        &device
-    };
+    let encodec_device = &device;
     let encodec_vb =
         unsafe { VarBuilder::from_mmaped_safetensors(&[encodec_weights], dtype, encodec_device)? };
     let encodec_config = encodec::Config::default();

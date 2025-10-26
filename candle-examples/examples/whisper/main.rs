@@ -3,28 +3,23 @@
 // - Batch size greater than 1.
 // - More token filters (SuppressBlanks, ApplyTimestampRules).
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use anyhow::{Error as E, Result};
 use candle::{Device, IndexOp, Tensor};
 use candle_nn::{
-    ops::{log_softmax, softmax},
     VarBuilder,
+    ops::{log_softmax, softmax},
 };
 use clap::{Parser, ValueEnum};
-use hf_hub::{api::sync::Api, Repo, RepoType};
-use rand::distr::weighted::WeightedIndex;
-use rand::distr::Distribution;
+use hf_hub::{Repo, RepoType, api::sync::Api};
 use rand::SeedableRng;
+use rand::distr::Distribution;
+use rand::distr::weighted::WeightedIndex;
 use tokenizers::Tokenizer;
 
 mod multilingual;
 
-use candle_transformers::models::whisper::{self as m, audio, Config};
+use candle_transformers::models::whisper::{self as m, Config, audio};
 
 pub enum Model {
     Normal(m::model::Whisper),
@@ -685,7 +680,9 @@ fn main() -> Result<()> {
                 std::path::PathBuf::from(input)
             }
         } else {
-            println!("No audio file submitted: Downloading https://huggingface.co/datasets/Narsil/candle_demo/blob/main/samples_jfk.wav");
+            println!(
+                "No audio file submitted: Downloading https://huggingface.co/datasets/Narsil/candle_demo/blob/main/samples_jfk.wav"
+            );
             dataset.get("samples_jfk.wav")?
         };
         let (config, tokenizer, model) = if args.quantized {

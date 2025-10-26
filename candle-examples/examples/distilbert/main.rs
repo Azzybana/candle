@@ -1,8 +1,4 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 use candle_transformers::models::distilbert::{
     Config, DistilBertForMaskedLM, DistilBertModel, DTYPE,
 };

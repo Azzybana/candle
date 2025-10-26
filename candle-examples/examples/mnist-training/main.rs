@@ -1,9 +1,4 @@
 // This should reach 91.5% accuracy.
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 use clap::{Parser, ValueEnum};
 use rand::prelude::*;

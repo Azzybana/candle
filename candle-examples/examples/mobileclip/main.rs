@@ -1,14 +1,9 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 use anyhow::Error as E;
 use clap::{Parser, ValueEnum};
 
 use candle::{DType, Device, Tensor};
-use candle_nn::{ops::softmax, VarBuilder};
+use candle_nn::{VarBuilder, ops::softmax};
 use candle_transformers::models::mobileclip;
 
 use tokenizers::Tokenizer;

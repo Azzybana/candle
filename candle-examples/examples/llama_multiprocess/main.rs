@@ -6,8 +6,6 @@
 // The tokenizer config can be retrieved from:
 // https://huggingface.co/hf-internal-testing/llama-tokenizer/raw/main/tokenizer.json
 
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use anyhow::{Error as E, Result, bail};
 use clap::{Parser, ValueEnum};

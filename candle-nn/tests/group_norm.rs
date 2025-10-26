@@ -18,8 +18,6 @@ t = torch.tensor(
 print(group_norm(t, num_groups=2))
 print(group_norm(t, num_groups=3))
 */
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use anyhow::Result;
 use candle::test_utils::to_vec3_round;

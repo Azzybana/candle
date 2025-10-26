@@ -1,1 +1,1 @@
-- `--cpu` forces CPU execution; omit to use Metal when available. Combine with `--dtype bf16|f16|f32` to override the default precision.
+- `--cpu` forces CPU execution. Combine with `--dtype bf16|f16|f32` to override the default precision.

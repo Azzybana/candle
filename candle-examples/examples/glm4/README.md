@@ -26,11 +26,11 @@ cargo run --example glm4 --release -- --which "glm4-new" --weight-path /path/GLM
 cargo run --example glm4 --release -- --which "glm4-old" --weight-path /path/glm-4-9b --prompt "How are you today?"
 ```
 
-### Running with local file (Metal)
+### Running with local file
 
 ```bash
-cargo run --example glm4 --release --features metal -- --which "glm4-new" --weight-path /path/GLM-4-9B-0414 --prompt "How are you today?"
-cargo run --example glm4 --release --features metal -- --which "glm4-old" --weight-path /path/glm-4-9b --prompt "How are you today?"
+cargo run --example glm4 --release --cpu -- --which "glm4-new" --weight-path /path/GLM-4-9B-0414 --prompt "How are you today?"
+cargo run --example glm4 --release --cpu -- --which "glm4-old" --weight-path /path/glm-4-9b --prompt "How are you today?"
 ```
 
 ### Running with CPU

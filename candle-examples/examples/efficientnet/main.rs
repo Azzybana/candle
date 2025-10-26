@@ -2,11 +2,6 @@
 //!
 //! https://arxiv.org/abs/1905.11946
 
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 use candle::{DType, IndexOp, D};
 use candle_nn::{Module, VarBuilder};

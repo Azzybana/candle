@@ -17,7 +17,7 @@ $ cargo run --example moondream --release -- --prompt "Describe the people behin
 avavx: false, neon: true, simd128: false, f16c: false
 temp: 0.00 repeat-penalty: 1.00 repeat-last-n: 64
 retrieved the files in 3.395583ms
-Running on CPU, to run on GPU(metal), build this example with `--features metal`
+Running on CPU
 loaded the model in 5.485493792s
 loaded and encoded the image Tensor[dims 3, 378, 378; f32] in 4.801396417s
 starting the inference loop

@@ -5,7 +5,7 @@
 ## Running the example
 
 ```bash
-$ cargo run --example granite --features metal -r -- --model-type "granite7b-instruct" \
+$ cargo run --example granite --cpu -r -- --model-type "granite7b-instruct" \
     --prompt "Explain how quantum computing differs from classical computing, focusing on key concepts like qubits, superposition, and entanglement. Describe two potential breakthroughs in the fields of drug discovery and cryptography. Offer a convincing argument for why businesses and governments should invest in quantum computing research now, emphasizing its future benefits and the risks of falling behind"
 
     Explain how quantum computing differs from classical computing, focusing on key concepts like qubits, superposition, and entanglement. Describe two potential breakthroughs in the fields of drug discovery and cryptography. Offer a convincing argument for why businesses and governments should invest in quantum computing research now, emphasizing its future benefits and the risks of falling behind competitors.

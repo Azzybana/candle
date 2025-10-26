@@ -1,18 +1,13 @@
 // An implementation of different Granite models https://www.ibm.com/granite
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-use anyhow::{bail, Error as E, Result};
+use anyhow::{Error as E, Result, bail};
 use clap::{Parser, ValueEnum};
 
 use candle::{DType, Tensor};
 use candle_nn::VarBuilder;
 use candle_transformers::generation::{LogitsProcessor, Sampling};
-use hf_hub::{api::sync::Api, Repo, RepoType};
+use hf_hub::{Repo, RepoType, api::sync::Api};
 use std::io::Write;
 
 use candle_transformers::models::granite as model;

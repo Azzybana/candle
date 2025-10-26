@@ -1,8 +1,3 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 use anyhow::Result;
 use candle::{DType, IndexOp, Tensor};
@@ -140,7 +135,9 @@ fn main() -> Result<()> {
             } else {
                 let (pcm, sample_rate) = audio_io::pcm_decode(args.in_file)?;
                 if sample_rate != model_sample_rate {
-                    println!("WARNING: snac uses a {model_sample_rate} sample rate, input uses {sample_rate}, resampling...");
+                    println!(
+                        "WARNING: snac uses a {model_sample_rate} sample rate, input uses {sample_rate}, resampling..."
+                    );
                     candle_examples::audio::resample(&pcm, sample_rate, model_sample_rate)?
                 } else {
                     pcm

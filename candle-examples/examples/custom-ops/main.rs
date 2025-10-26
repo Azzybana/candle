@@ -3,8 +3,6 @@
 //
 // In this example we add the RMS normalization operation and implement it for f32.
 
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use clap::Parser;
 

@@ -3,11 +3,6 @@
 //! https://huggingface.co/spaces/BVRA/PlantCLEF2024
 //! https://zenodo.org/records/10848263
 
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 
 use clap::Parser;
 

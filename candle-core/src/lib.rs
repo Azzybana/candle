@@ -102,8 +102,6 @@ pub use metal_backend::{MetalDevice, MetalError, MetalStorage};
 #[cfg(not(feature = "metal"))]
 pub use dummy_metal_backend::{MetalDevice, MetalError, MetalStorage};
 
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 pub trait ToUsize2 {
     fn to_usize2(self) -> (usize, usize);

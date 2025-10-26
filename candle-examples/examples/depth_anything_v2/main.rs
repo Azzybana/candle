@@ -1,10 +1,6 @@
 //! Depth Anything V2
 //! https://huggingface.co/spaces/depth-anything/Depth-Anything-V2
 
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
 
 use clap::Parser;
 use std::{ffi::OsString, path::PathBuf, sync::Arc};

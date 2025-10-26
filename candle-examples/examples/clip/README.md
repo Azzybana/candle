@@ -26,10 +26,10 @@ INFO clip: Probability: 0.0001% Text: a photo of two cats
 INFO clip: Probability: 0.0000% Text: a robot holding a candle
 ```
 
-## Running on an example with metal feature (mac)
+## Running on an example
 
 ```
-$ cargo run --features metal --example clip --release -- --images "candle-examples/examples/stable-diffusion/assets/stable-diffusion-xl.jpg","candle-examples/examples/yolo-v8/assets/bike.jpg" --cpu --sequences "a cycling race","a photo of two cats","a robot holding a candle"
+$ cargo run --example clip --release -- --images "candle-examples/examples/stable-diffusion/assets/stable-diffusion-xl.jpg","candle-examples/examples/yolo-v8/assets/bike.jpg" --cpu --sequences "a cycling race","a photo of two cats","a robot holding a candle"
 
 
 Results for image: candle-examples/examples/stable-diffusion/assets/stable-diffusion-xl.jpg

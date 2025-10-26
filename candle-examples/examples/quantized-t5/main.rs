@@ -1,8 +1,3 @@
-#[cfg(feature = "mkl")]
-extern crate intel_mkl_src;
-
-#[cfg(feature = "accelerate")]
-extern crate accelerate_src;
 use std::io::Write;
 use std::path::PathBuf;
 
@@ -12,7 +7,7 @@ use anyhow::{Error as E, Result};
 use candle::{Device, Tensor};
 use candle_transformers::generation::LogitsProcessor;
 use clap::{Parser, ValueEnum};
-use hf_hub::{api::sync::Api, api::sync::ApiRepo, Repo, RepoType};
+use hf_hub::{Repo, RepoType, api::sync::Api, api::sync::ApiRepo};
 use tokenizers::Tokenizer;
 
 #[derive(Clone, Debug, Copy, ValueEnum)]

@@ -38,7 +38,7 @@ $ cargo run --example stella-en-v5 --release --features metal -- --which 1.5b
 > of cancer. The polyphenols in green tea may also have anti-inflammatory and weight loss properties.
 >
 
-$ cargo run --example stella-en-v5 --release --features metal -- --which 400m
+$ cargo run --example stella-en-v5 --release --cpu -- --which 1.5b
 
 >
 > Score: 0.8397539
