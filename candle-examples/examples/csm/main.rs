@@ -25,9 +25,6 @@ struct Args {
     #[arg(long)]
     tracing: bool,
 
-    #[arg(long)]
-    use_flash_attn: bool,
-
     /// The prompt to be used for the generation, use a | to separate the speakers.
     #[arg(long, default_value = "Hey how are you doing today?")]
     prompt: String,

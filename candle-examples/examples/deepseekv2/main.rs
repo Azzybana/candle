@@ -148,9 +148,6 @@ struct Args {
     tracing: bool,
 
     #[arg(long)]
-    use_flash_attn: bool,
-
-    #[arg(long)]
     prompt: String,
 
     /// The temperature used to generate samples.
