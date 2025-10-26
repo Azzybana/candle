@@ -516,10 +516,10 @@ impl<'a> VarBuilder<'a> {
         paths: &[P],
         dtype: DType,
         dev: &Device,
-    ) -> Result<Self> {
+    ) -> Result<Self> { unsafe {
         let tensors = candle::safetensors::MmapedSafetensors::multi(paths)?;
         Ok(Self::from_backend(Box::new(tensors), dtype, dev.clone()))
-    }
+    }}
 
     /// Initializes a `VarBuilder` from a binary buffer in the safetensor format.
     pub fn from_buffered_safetensors(data: Vec<u8>, dtype: DType, dev: &Device) -> Result<Self> {
@@ -615,11 +615,11 @@ impl ShardedSafeTensors {
         paths: &[P],
         dtype: DType,
         dev: &Device,
-    ) -> Result<ShardedVarBuilder<'static>> {
+    ) -> Result<ShardedVarBuilder<'static>> { unsafe {
         let tensors = candle::safetensors::MmapedSafetensors::multi(paths)?;
         let backend = ShardedSafeTensors(tensors);
         Ok(VarBuilderArgs::new_with_args(backend, dtype, dev))
-    }
+    }}
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
