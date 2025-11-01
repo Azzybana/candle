@@ -89,9 +89,9 @@ impl Args {
         Tokenizer::from_file(&tokenizer_path).map_err(anyhow::Error::msg)
     }
 
-    pub fn prompt_content(&self, config: &Config, config_dir: Option<&std::path::Path>) -> Result<String> {
+    pub async fn prompt_content(&self, config: &Config, config_dir: Option<&std::path::Path>) -> Result<String> {
         let prompt_path = self.effective_prompt_path(config, config_dir);
-        crate::markdown::read_markdown(&prompt_path)
+        crate::markdown::read_markdown(&prompt_path).await
     }
 
     pub fn tokenizer_path(&self, config: &Config, config_dir: Option<&std::path::Path>) -> String {

@@ -1,6 +1,7 @@
 use anyhow::Result;
-use std::fs;
+use trash_parallelism::chars::processing::read_file_to_string_async;
 
-pub fn read_markdown(path: &str) -> Result<String> {
-    Ok(fs::read_to_string(path)?)
+pub async fn read_markdown(path: &str) -> Result<String> {
+    let content = read_file_to_string_async(path).await?;
+    Ok(content)
 }

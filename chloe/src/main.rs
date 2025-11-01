@@ -5,16 +5,16 @@ mod token_output_stream;
 
 use std::io::Write;
 
-use candle::quantized::gguf_file;
 use candle::Tensor;
+use candle::quantized::gguf_file;
 use candle_transformers::generation::{LogitsProcessor, Sampling};
 
 use candle_transformers::models::quantized_qwen3::ModelWeights as Qwen3;
 use token_output_stream::TokenOutputStream;
 
-use cli::Args;
 use crate::config::default::ChloeConfig;
-use clap::{Parser, CommandFactory};
+use clap::{CommandFactory, Parser};
+use cli::Args;
 
 fn device(_cpu: bool) -> candle::Result<candle::Device> {
     Ok(candle::Device::Cpu)
@@ -33,6 +33,10 @@ fn format_size(size_in_bytes: usize) -> String {
 }
 
 fn main() -> anyhow::Result<()> {
+    smol::block_on(async_main())
+}
+
+async fn async_main() -> anyhow::Result<()> {
     use tracing_chrome::ChromeLayerBuilder;
     use tracing_subscriber::prelude::*;
 
@@ -57,14 +61,14 @@ fn main() -> anyhow::Result<()> {
     let config_path = if let Some(path) = &args.use_config {
         path.clone()
     } else {
-        ChloeConfig::find_config().unwrap_or_else(|| {
+        ChloeConfig::find_config().await.unwrap_or_else(|| {
             Args::command().print_help().unwrap();
             std::process::exit(1);
         })
     };
 
     // Load config
-    let config = ChloeConfig::load_from_file(&config_path)?;
+    let config = ChloeConfig::load_from_file(&config_path).await?;
     let config_dir = std::path::Path::new(&config_path).parent();
 
     let _guard = if args.tracing {
@@ -84,7 +88,9 @@ fn main() -> anyhow::Result<()> {
     );
     println!(
         "temp: {:.2} repeat-penalty: {:.2} repeat-last-n: {}",
-        args.effective_temperature(&config.chloe), args.effective_repeat_penalty(&config.chloe), args.effective_repeat_last_n(&config.chloe)
+        args.effective_temperature(&config.chloe),
+        args.effective_repeat_penalty(&config.chloe),
+        args.effective_repeat_last_n(&config.chloe)
     );
 
     let model_path = args.model_path(&config.chloe, config_dir);
@@ -93,7 +99,8 @@ fn main() -> anyhow::Result<()> {
     let device = device(args.cpu)?;
 
     let mut model = {
-        let model = gguf_file::Content::read(&mut file).map_err(|e| e.with_path(model_path.clone()))?;
+        let model =
+            gguf_file::Content::read(&mut file).map_err(|e| e.with_path(model_path.clone()))?;
         let mut total_size_in_bytes = 0;
         for (_, tensor) in model.tensor_infos.iter() {
             let elem_count = tensor.shape.elem_count();
@@ -114,9 +121,12 @@ fn main() -> anyhow::Result<()> {
     let tokenizer_path = args.tokenizer_path(&config.chloe, config_dir);
     let vocab = crate::config::read_config::load_vocab(&tokenizer_path)?;
     let mut tos = TokenOutputStream::new(tokenizer, vocab);
-    let prompt_str = args.prompt_content(&config.chloe, config_dir)?;
+    let prompt_str = args.prompt_content(&config.chloe, config_dir).await?;
 
-    let prompt_str = config.chloe.prompt_template.replace("{prompt}", &prompt_str);
+    let prompt_str = config
+        .chloe
+        .prompt_template
+        .replace("{prompt}", &prompt_str);
     print!("formatted prompt: {}", &prompt_str);
 
     let tokens = tos
@@ -135,7 +145,10 @@ fn main() -> anyhow::Result<()> {
         let sampling = if temperature <= 0. {
             Sampling::ArgMax
         } else {
-            match (args.effective_top_k(&config.chloe), args.effective_top_p(&config.chloe)) {
+            match (
+                args.effective_top_k(&config.chloe),
+                args.effective_top_p(&config.chloe),
+            ) {
                 (None, None) => Sampling::All { temperature },
                 (Some(k), None) => Sampling::TopK { k, temperature },
                 (None, Some(p)) => Sampling::TopP { p, temperature },
@@ -172,7 +185,12 @@ fn main() -> anyhow::Result<()> {
         std::io::stdout().flush()?;
     }
 
-    let eos_tokens: Vec<u32> = config.chloe.eos_tokens.iter().filter_map(|t| tos.get_token(t)).collect();
+    let eos_tokens: Vec<u32> = config
+        .chloe
+        .eos_tokens
+        .iter()
+        .filter_map(|t| tos.get_token(t))
+        .collect();
 
     let start_post_prompt = std::time::Instant::now();
 
@@ -184,7 +202,9 @@ fn main() -> anyhow::Result<()> {
         let logits = if args.effective_repeat_penalty(&config.chloe) == 1. {
             logits
         } else {
-            let start_at = all_tokens.len().saturating_sub(args.effective_repeat_last_n(&config.chloe));
+            let start_at = all_tokens
+                .len()
+                .saturating_sub(args.effective_repeat_last_n(&config.chloe));
             candle_transformers::utils::apply_repeat_penalty(
                 &logits,
                 args.effective_repeat_penalty(&config.chloe),

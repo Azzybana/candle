@@ -3,21 +3,22 @@ use std::collections::HashMap;
 use anyhow::Result;
 use serde_json;
 use toml;
+use trash_parallelism::io::utils::read_file_async;
 use super::default::ChloeConfig;
 
 impl ChloeConfig {
-    pub fn load_from_file(path: &str) -> Result<Self> {
-        let content = fs::read_to_string(path)?;
+    pub async fn load_from_file(path: &str) -> Result<Self> {
+        let content = read_file_async(path).await?;
         let config: ChloeConfig = toml::from_str(&content)?;
         Ok(config)
     }
 
-    pub fn find_config() -> Option<String> {
+    pub async fn find_config() -> Option<String> {
         let search_paths = ["", "data/", ".config/", "config/", "model/"];
         for dir in &search_paths {
             let path = format!("{}config.toml", dir);
             if std::path::Path::new(&path).exists()
-                && Self::load_from_file(&path).is_ok() {
+                && Self::load_from_file(&path).await.is_ok() {
                 return Some(path);
             }
         }
