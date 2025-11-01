@@ -1,0 +1,25 @@
+[workspace]
+
+[package]
+    name = "chloe"
+    version = "0.1.0"
+    edition = "2024"
+    rust-version = "1.93"
+
+[dependencies]
+    anyhow = "1.0"
+    clap = { version = "4.0", features = ["derive"] }
+    candle = { path = "../candle-core", package = "candle-core" }
+    candle-nn = { path = "../candle-nn" }
+    candle-transformers = { path = "../candle-transformers" }
+    tokenizers = { version = "0.22", features = ["onig"] }
+    tracing = "0.1"
+    tracing-chrome = "0.7"
+    tracing-subscriber = "0.3"
+    markdown = { version = "1.0", features = [
+        "json",
+        "serde"
+    ] }
+    serde = { version = "1.0", features = ["derive"] }
+    toml = { version = "0.9" }
+    serde_json = "1.0"

@@ -1,0 +1,222 @@
+mod cli;
+mod config;
+mod markdown;
+mod token_output_stream;
+
+use std::io::Write;
+
+use candle::quantized::gguf_file;
+use candle::Tensor;
+use candle_transformers::generation::{LogitsProcessor, Sampling};
+
+use candle_transformers::models::quantized_qwen3::ModelWeights as Qwen3;
+use token_output_stream::TokenOutputStream;
+
+use cli::Args;
+use config::ChloeConfig;
+use clap::{Parser, CommandFactory};
+
+fn device(_cpu: bool) -> candle::Result<candle::Device> {
+    Ok(candle::Device::Cpu)
+}
+
+fn format_size(size_in_bytes: usize) -> String {
+    if size_in_bytes < 1_000 {
+        format!("{size_in_bytes}B")
+    } else if size_in_bytes < 1_000_000 {
+        format!("{:.2}KB", size_in_bytes as f64 / 1e3)
+    } else if size_in_bytes < 1_000_000_000 {
+        format!("{:.2}MB", size_in_bytes as f64 / 1e6)
+    } else {
+        format!("{:.2}GB", size_in_bytes as f64 / 1e9)
+    }
+}
+
+fn main() -> anyhow::Result<()> {
+    use tracing_chrome::ChromeLayerBuilder;
+    use tracing_subscriber::prelude::*;
+
+    let args = Args::parse();
+
+    // Handle generate commands
+    if args.generate_config {
+        std::fs::create_dir_all("data")?;
+        ChloeConfig::generate_config_file("data/config.toml")?;
+        println!("Generated data/config.toml");
+        return Ok(());
+    }
+
+    if args.generate_prompt {
+        std::fs::create_dir_all("data")?;
+        ChloeConfig::generate_prompt_file("data/prompt.md")?;
+        println!("Generated data/prompt.md");
+        return Ok(());
+    }
+
+    // Determine config path
+    let config_path = if let Some(path) = &args.use_config {
+        path.clone()
+    } else {
+        ChloeConfig::find_config().unwrap_or_else(|| {
+            Args::command().print_help().unwrap();
+            std::process::exit(1);
+        })
+    };
+
+    // Load config
+    let config = ChloeConfig::load_from_file(&config_path)?;
+    let config_dir = std::path::Path::new(&config_path).parent();
+
+    let _guard = if args.tracing {
+        let (chrome_layer, guard) = ChromeLayerBuilder::new().build();
+        tracing_subscriber::registry().with(chrome_layer).init();
+        Some(guard)
+    } else {
+        None
+    };
+
+    println!(
+        "avx: {}, neon: {}, simd128: {}, f16c: {}",
+        candle::utils::with_avx(),
+        candle::utils::with_neon(),
+        candle::utils::with_simd128(),
+        candle::utils::with_f16c()
+    );
+    println!(
+        "temp: {:.2} repeat-penalty: {:.2} repeat-last-n: {}",
+        args.temperature, args.repeat_penalty, args.repeat_last_n
+    );
+
+    let model_path = args.model_path(&config.chloe, config_dir);
+    let mut file = std::fs::File::open(&model_path)?;
+    let start = std::time::Instant::now();
+    let device = device(args.cpu)?;
+
+    let mut model = {
+        let model = gguf_file::Content::read(&mut file).map_err(|e| e.with_path(model_path.clone()))?;
+        let mut total_size_in_bytes = 0;
+        for (_, tensor) in model.tensor_infos.iter() {
+            let elem_count = tensor.shape.elem_count();
+            total_size_in_bytes +=
+                elem_count * tensor.ggml_dtype.type_size() / tensor.ggml_dtype.block_size();
+        }
+        println!(
+            "loaded {:?} tensors ({}) in {:.2}s",
+            model.tensor_infos.len(),
+            &format_size(total_size_in_bytes),
+            start.elapsed().as_secs_f32(),
+        );
+        Qwen3::from_gguf(model, &mut file, &device)?
+    };
+    println!("model built");
+
+    let tokenizer = args.tokenizer(&config.chloe, config_dir)?;
+    let tokenizer_path = args.tokenizer_path(&config.chloe, config_dir);
+    let vocab = config::load_vocab(&tokenizer_path)?;
+    let mut tos = TokenOutputStream::new(tokenizer, vocab);
+    let prompt_str = args.prompt_content(&config.chloe, config_dir)?;
+
+    let prompt_str = format!("<|im_start|>user\n{prompt_str}<|im_end|>\n<|im_start|>assistant\n");
+    print!("formatted prompt: {}", &prompt_str);
+
+    let tokens = tos
+        .tokenizer()
+        .encode(prompt_str, true)
+        .map_err(anyhow::Error::msg)?;
+
+    let tokens = tokens.get_ids();
+
+    let to_sample = args.sample_len.saturating_sub(1);
+
+    let mut all_tokens = vec![];
+
+    let mut logits_processor = {
+        let temperature = args.temperature;
+        let sampling = if temperature <= 0. {
+            Sampling::ArgMax
+        } else {
+            match (args.top_k, args.top_p) {
+                (None, None) => Sampling::All { temperature },
+                (Some(k), None) => Sampling::TopK { k, temperature },
+                (None, Some(p)) => Sampling::TopP { p, temperature },
+                (Some(k), Some(p)) => Sampling::TopKThenTopP { k, p, temperature },
+            }
+        };
+        LogitsProcessor::from_sampling(args.seed, sampling)
+    };
+
+    let start_prompt_processing = std::time::Instant::now();
+
+    let mut next_token = if !args.split_prompt {
+        let input = Tensor::new(tokens, &device)?.unsqueeze(0)?;
+        let logits = model.forward(&input, 0)?;
+        let logits = logits.squeeze(0)?;
+        logits_processor.sample(&logits)?
+    } else {
+        let mut next_token = 0;
+        for (pos, token) in tokens.iter().enumerate() {
+            let input = Tensor::new(&[*token], &device)?.unsqueeze(0)?;
+            let logits = model.forward(&input, pos)?;
+            let logits = logits.squeeze(0)?;
+            next_token = logits_processor.sample(&logits)?
+        }
+        next_token
+    };
+
+    let prompt_dt = start_prompt_processing.elapsed();
+
+    all_tokens.push(next_token);
+
+    if let Some(t) = tos.next_token(next_token)? {
+        print!("{t}");
+        std::io::stdout().flush()?;
+    }
+
+    let eos_token = tos.get_token("<|im_end|>").unwrap();
+
+    let start_post_prompt = std::time::Instant::now();
+
+    let mut sampled = 0;
+    for index in 0..to_sample {
+        let input = Tensor::new(&[next_token], &device)?.unsqueeze(0)?;
+        let logits = model.forward(&input, tokens.len() + index)?;
+        let logits = logits.squeeze(0)?;
+        let logits = if args.repeat_penalty == 1. {
+            logits
+        } else {
+            let start_at = all_tokens.len().saturating_sub(args.repeat_last_n);
+            candle_transformers::utils::apply_repeat_penalty(
+                &logits,
+                args.repeat_penalty,
+                &all_tokens[start_at..],
+            )?
+        };
+        next_token = logits_processor.sample(&logits)?;
+        all_tokens.push(next_token);
+        if let Some(t) = tos.next_token(next_token)? {
+            print!("{t}");
+            std::io::stdout().flush()?;
+        }
+        sampled += 1;
+        if next_token == eos_token {
+            break;
+        };
+    }
+
+    if let Some(rest) = tos.decode_rest().map_err(candle::Error::msg)? {
+        print!("{rest}");
+    }
+
+    std::io::stdout().flush()?;
+    let dt = start_post_prompt.elapsed();
+    println!(
+        "\n\n{:4} prompt tokens processed: {:.2} token/s",
+        tokens.len(),
+        tokens.len() as f64 / prompt_dt.as_secs_f64(),
+    );
+    println!(
+        "{sampled:4} tokens generated: {:.2} token/s",
+        sampled as f64 / dt.as_secs_f64(),
+    );
+    Ok(())
+}
