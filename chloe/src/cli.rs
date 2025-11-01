@@ -1,7 +1,7 @@
 use clap::Parser;
 use tokenizers::Tokenizer;
 use anyhow::Result;
-use crate::config::Config;
+use crate::config::default::Config;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]

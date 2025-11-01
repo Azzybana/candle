@@ -13,7 +13,7 @@ use candle_transformers::models::quantized_qwen3::ModelWeights as Qwen3;
 use token_output_stream::TokenOutputStream;
 
 use cli::Args;
-use config::ChloeConfig;
+use crate::config::default::ChloeConfig;
 use clap::{Parser, CommandFactory};
 
 fn device(_cpu: bool) -> candle::Result<candle::Device> {
@@ -112,7 +112,7 @@ fn main() -> anyhow::Result<()> {
 
     let tokenizer = args.tokenizer(&config.chloe, config_dir)?;
     let tokenizer_path = args.tokenizer_path(&config.chloe, config_dir);
-    let vocab = config::load_vocab(&tokenizer_path)?;
+    let vocab = crate::config::read_config::load_vocab(&tokenizer_path)?;
     let mut tos = TokenOutputStream::new(tokenizer, vocab);
     let prompt_str = args.prompt_content(&config.chloe, config_dir)?;
 
