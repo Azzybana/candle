@@ -2,6 +2,8 @@ mod cli;
 mod config;
 mod markdown;
 mod token_output_stream;
+mod training;
+mod mode;
 
 use std::io::Write;
 
@@ -92,6 +94,27 @@ async fn async_main() -> anyhow::Result<()> {
         args.effective_repeat_penalty(&config.chloe),
         args.effective_repeat_last_n(&config.chloe)
     );
+
+    // Dispatch to modes
+    if args.training {
+        training::run_training(&config).await?;
+        return Ok(());
+    }
+
+    if args.chat {
+        mode::run_mode(&config, mode::Mode::Chat).await?;
+        return Ok(());
+    }
+
+    if args.code {
+        mode::run_mode(&config, mode::Mode::Code).await?;
+        return Ok(());
+    }
+
+    if args.translate {
+        println!("Translate mode not implemented yet.");
+        return Ok(());
+    }
 
     let model_path = args.model_path(&config.chloe, config_dir);
     let mut file = std::fs::File::open(&model_path)?;
