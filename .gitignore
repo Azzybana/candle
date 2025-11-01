@@ -55,3 +55,6 @@ bria.wav
 
 
 .vscode/settings.json
+chloe/data/
+chloe/Cargo.lock
+chloe/target/
