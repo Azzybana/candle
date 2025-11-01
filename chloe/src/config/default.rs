@@ -3,9 +3,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct ChloeConfig {
     pub chloe: Config,
+    pub training: Option<TrainingConfig>,
+    pub chat: Option<ChatConfig>,
+    pub code: Option<CodeConfig>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Config {
     /// Path to the model file (e.g., .gguf, .safetensors)
     pub model: String,
@@ -35,6 +38,28 @@ pub struct Config {
     pub eos_tokens: Vec<String>,
 }
 
+#[derive(Deserialize, Serialize, Debug)]
+pub struct TrainingConfig {
+    /// Path to the source SafeTensors file
+    pub source_safetensors: String,
+    /// Path to the output GGUF file
+    pub output_gguf: String,
+    /// Optional path to metadata JSON file
+    pub metadata: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct ChatConfig {
+    /// Custom prompt for chat mode
+    pub prompt: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct CodeConfig {
+    /// Custom prompt for code mode
+    pub prompt: String,
+}
+
 impl ChloeConfig {
     pub fn default_config() -> Self {
         ChloeConfig {
@@ -53,6 +78,17 @@ impl ChloeConfig {
                 prompt_template: "<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n".to_string(),
                 eos_tokens: vec!["<|im_end|>".to_string(), "<|endoftext|>".to_string()],
             },
+            training: Some(TrainingConfig {
+                source_safetensors: "model.safetensors".to_string(),
+                output_gguf: "model.gguf".to_string(),
+                metadata: Some("metadata.json".to_string()),
+            }),
+            chat: Some(ChatConfig {
+                prompt: "You are a helpful AI assistant. Respond to the user's message.".to_string(),
+            }),
+            code: Some(CodeConfig {
+                prompt: "You are a code generation assistant. Generate code based on the user's request.".to_string(),
+            }),
         }
     }
 }

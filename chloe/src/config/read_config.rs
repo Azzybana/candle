@@ -38,3 +38,9 @@ pub fn load_vocab(tokenizer_path: &str) -> Result<HashMap<String, u32>> {
     }
     Ok(vocab)
 }
+
+pub fn load_metadata(metadata_path: &str) -> Result<serde_json::Value> {
+    let content = fs::read_to_string(metadata_path)?;
+    let json: serde_json::Value = serde_json::from_str(&content)?;
+    Ok(json)
+}

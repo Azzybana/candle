@@ -15,6 +15,14 @@ impl ChloeConfig {
         if !prompt_path.exists() {
             Self::generate_prompt_file(prompt_path.to_str().unwrap())?;
         }
+        let chat_prompt_path = config_dir.join("chat.md");
+        if !chat_prompt_path.exists() {
+            Self::generate_chat_prompt_file(chat_prompt_path.to_str().unwrap())?;
+        }
+        let code_prompt_path = config_dir.join("code.md");
+        if !code_prompt_path.exists() {
+            Self::generate_code_prompt_file(code_prompt_path.to_str().unwrap())?;
+        }
         Ok(())
     }
 }
