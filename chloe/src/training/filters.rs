@@ -1,12 +1,13 @@
-use walkdir::WalkDir;
+use trash_parallelism::sys::path::find_files_parallel;
+use trash_parallelism::sys::Timer;
+use trash_parallelism::chars::core::deduplicate_lines;
 
 pub fn collect_files_with_extension(dir: &str, ext: &str) -> Vec<String> {
-    WalkDir::new(dir)
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|entry| entry.path().extension().and_then(|s| s.to_str()) == Some(ext))
-        .map(|entry| entry.path().to_string_lossy().to_string())
-        .collect()
+    let _timer = Timer::new("collect_files_with_extension");
+
+    // Use parallel file finding for better performance
+    let pattern = format!("*.{}", ext);
+    find_files_parallel(dir, &pattern).unwrap_or_default()
 }
 
 pub fn is_valid_json(content: &str) -> bool {
@@ -31,4 +32,13 @@ where
         })
         .cloned()
         .collect()
+}
+
+pub fn deduplicate_text_samples(samples: Vec<String>) -> Vec<String> {
+    let _timer = Timer::new("deduplicate_text_samples");
+
+    // Join all samples with newlines, deduplicate lines, then split back
+    let combined = samples.join("\n");
+    let deduplicated = deduplicate_lines(&combined);
+    deduplicated.lines().map(|s| s.to_string()).collect()
 }

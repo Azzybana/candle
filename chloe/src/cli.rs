@@ -138,7 +138,8 @@ impl Args {
         } else if let Some(path) = &self.model {
             path.clone()
         } else {
-            self.resolve_path(&config.model, config_dir)
+            let folder_path = self.resolve_path(&config.model_folder, config_dir);
+            std::path::Path::new(&folder_path).join(&config.model_file).to_string_lossy().to_string()
         };
         if !std::path::Path::new(&path).exists() {
             panic!("Model file does not exist: {}", path);

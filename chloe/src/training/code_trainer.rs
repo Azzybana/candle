@@ -2,32 +2,85 @@ use crate::config::default::TrainingConfig;
 use crate::training::common::{
     create_training_dir, load_tokenizer, save_training_data, tokenize_texts,
 };
-use crate::training::filters::{
-    collect_files_with_extension, filter_files_by_content, is_valid_rust_code,
-};
+use crate::training::filters::{collect_files_with_extension, filter_files_by_content, is_valid_rust_code, deduplicate_text_samples};
+use trash_parallelism::sys::Timer;
+use trash_parallelism::common::utils::AtomicCounter;
 use anyhow::Result;
 use safetensors::tensor::TensorView;
 use std::collections::HashMap;
-use std::fs;
 use syn::{File, ItemFn, ItemStruct, visit::Visit};
+use trash_parallelism::io::utils::read_file_async;
+use trash_parallelism::channels::core::{bounded_queue_3, send_async, recv_async};
 
 pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &str) -> Result<()> {
+    let _overall_timer = Timer::new("prepare_code_training_data");
+    let processed_counter = AtomicCounter::new();
     let training_dir = create_training_dir(config)?;
     let tokenizer = load_tokenizer()?;
 
     let code_files = collect_files_with_extension(project_path, "rs");
     let valid_code_files = filter_files_by_content(&code_files, is_valid_rust_code);
+    let total_files = valid_code_files.len();
+    println!("Found {} valid Rust files to process", total_files);
 
-    let mut code_samples = Vec::new();
-    for file in valid_code_files {
-        if let Ok(content) = fs::read_to_string(&file) {
-            if let Ok(abstracted) = abstract_rust_code(&content) {
-                code_samples.push(abstracted);
+    // Create a bounded channel for file contents (capacity 10 for good throughput)
+    let (sender, receiver) = bounded_queue_3::<(String, String)>(10);
+
+    // Spawn producer task to read files
+    let producer_handle = smol::spawn(async move {
+        for file in valid_code_files {
+            match read_file_async(&file).await {
+                Ok(content) => {
+                    // Send file path and content through channel
+                    if send_async(&sender, (file, content)).await.is_err() {
+                        eprintln!("Failed to send file content through channel");
+                    }
+                }
+                Err(e) => eprintln!("Failed to read file: {}", e),
             }
         }
+        // Drop sender to signal end of data
+        drop(sender);
+    });
+
+    // Spawn consumer tasks to process files
+    let mut consumer_handles = Vec::new();
+    let num_consumers = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+        .min(4); // Limit to 4 consumers max
+
+    for _ in 0..num_consumers {
+        let receiver = receiver.clone();
+        let handle = smol::spawn(async move {
+            let mut processed_samples = Vec::new();
+            while let Ok((_file_path, content)) = recv_async(&receiver).await {
+                if let Ok(abstracted) = abstract_rust_code(&content) {
+                    processed_samples.push(abstracted);
+                }
+            }
+            processed_samples
+        });
+        consumer_handles.push(handle);
     }
 
-    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &code_samples, 512)?;
+    // Wait for producer to finish
+    producer_handle.await;
+
+    // Wait for all consumers and collect results
+    let mut all_code_samples = Vec::new();
+    for handle in consumer_handles {
+        let samples = handle.await;
+        all_code_samples.extend(samples);
+    }
+
+    println!("Successfully processed {} code samples", all_code_samples.len());
+
+    // Deduplicate samples to reduce training data size and improve quality
+    let deduplicated_samples = deduplicate_text_samples(all_code_samples);
+    println!("After deduplication: {} unique code samples", deduplicated_samples.len());
+
+    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &deduplicated_samples, 512)?;
 
     let input_ids_tensor = TensorView::new(
         safetensors::Dtype::I64,
@@ -45,7 +98,7 @@ pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &
     tensors.insert("attention_mask".to_string(), attention_masks_tensor);
 
     let metadata = serde_json::json!({
-        "num_samples": code_samples.len(),
+        "num_samples": deduplicated_samples.len(),
         "max_len": 512,
         "tokenizer": "data/tokenizer.json",
         "project_path": project_path
@@ -57,7 +110,7 @@ pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &
         &training_dir,
         "training_data.safetensors",
         "metadata.json",
-    )?;
+    ).await?;
 
     Ok(())
 }

@@ -12,6 +12,7 @@
   candle = { path = "../candle-core", package = "candle-core" }
   candle-nn = { path = "../candle-nn" }
   candle-transformers = { path = "../candle-transformers" }
+  candle-onnx = { path = "../candle-onnx" }
   tokenizers = { version = "0.22", features = ["onig"] }
   tracing = "0.1"
   tracing-chrome = "0.7"
@@ -31,12 +32,9 @@
   ggml-quants = "0.1"
   syn = { version = "2.0", features = ["full", "visit"] }
   walkdir = "2.5"
-  ort = { version = "1.16", default-features = false, features = [
-    "compile-static",
-    "half",
-    "onednn",
-    "directml"
-  ] }
+  ort = { version = "1.16" }
   rust_tokenizers = { version = "8.1.1", features = [
     "proto-compile"
   ] }
+  onnx = "0.1"
+  protobuf = "3.2"

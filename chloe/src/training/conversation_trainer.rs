@@ -1,6 +1,6 @@
 use crate::config::default::TrainingConfig;
 use crate::training::common::{create_training_dir, load_tokenizer, tokenize_texts, save_training_data};
-use crate::training::filters::{collect_files_with_extension, filter_files_by_content, is_valid_json};
+use crate::training::filters::{collect_files_with_extension, filter_files_by_content, is_valid_json, deduplicate_text_samples};
 use anyhow::Result;
 use safetensors::tensor::TensorView;
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,13 @@ pub async fn prepare_conversation_training_data(config: &TrainingConfig, convers
     }
 
     let texts: Vec<String> = conversations.iter().map(|conv| format!("<|user|>{}<|assistant|>{}", conv.user, conv.assistant)).collect();
-    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &texts, 512)?;
+
+    let original_count = texts.len();
+    // Deduplicate conversation texts
+    let deduplicated_texts = deduplicate_text_samples(texts);
+    println!("Generated {} conversation samples, {} after deduplication", original_count, deduplicated_texts.len());
+
+    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &deduplicated_texts, 512)?;
 
     let input_ids_tensor = TensorView::new(safetensors::Dtype::I64, vec![input_ids.len()], bytemuck::cast_slice(&input_ids))?;
     let attention_masks_tensor = TensorView::new(safetensors::Dtype::I64, vec![attention_masks.len()], bytemuck::cast_slice(&attention_masks))?;
@@ -40,13 +46,13 @@ pub async fn prepare_conversation_training_data(config: &TrainingConfig, convers
     tensors.insert("attention_mask".to_string(), attention_masks_tensor);
 
     let metadata = serde_json::json!({
-        "num_conversations": conversations.len(),
+        "num_samples": deduplicated_texts.len(),
         "max_len": 512,
         "tokenizer": "data/tokenizer.json",
         "conversations_path": conversations_path
     });
 
-    save_training_data(tensors, metadata, &training_dir, "conversation_training_data.safetensors", "conversation_metadata.json")?;
+    save_training_data(tensors, metadata, &training_dir, "conversation_training_data.safetensors", "conversation_metadata.json").await?;
 
     Ok(())
 }

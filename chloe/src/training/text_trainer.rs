@@ -1,6 +1,6 @@
 use crate::config::default::TrainingConfig;
 use crate::training::common::{create_training_dir, load_tokenizer, tokenize_texts, save_training_data};
-use crate::training::filters::collect_files_with_extension;
+use crate::training::filters::{collect_files_with_extension, deduplicate_text_samples};
 use anyhow::Result;
 use std::collections::HashMap;
 use std::fs;
@@ -21,7 +21,12 @@ pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &s
         }
     }
 
-    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &text_samples, 512)?;
+    let original_count = text_samples.len();
+    // Deduplicate text samples to improve training quality
+    let deduplicated_samples = deduplicate_text_samples(text_samples);
+    println!("Loaded {} text samples, {} after deduplication", original_count, deduplicated_samples.len());
+
+    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &deduplicated_samples, 512)?;
 
     let input_ids_tensor = TensorView::new(safetensors::Dtype::I64, vec![input_ids.len()], bytemuck::cast_slice(&input_ids))?;
     let attention_masks_tensor = TensorView::new(safetensors::Dtype::I64, vec![attention_masks.len()], bytemuck::cast_slice(&attention_masks))?;
@@ -31,13 +36,13 @@ pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &s
     tensors.insert("attention_mask".to_string(), attention_masks_tensor);
 
     let metadata = serde_json::json!({
-        "num_samples": text_samples.len(),
+        "num_samples": deduplicated_samples.len(),
         "max_len": 512,
         "tokenizer": "data/tokenizer.json",
         "corpus_path": corpus_path
     });
 
-    save_training_data(tensors, metadata, &training_dir, "text_training_data.safetensors", "text_metadata.json")?;
+    save_training_data(tensors, metadata, &training_dir, "text_training_data.safetensors", "text_metadata.json").await?;
 
     Ok(())
 }

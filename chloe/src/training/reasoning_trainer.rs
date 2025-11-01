@@ -1,6 +1,6 @@
 use crate::config::default::TrainingConfig;
 use crate::training::common::{create_training_dir, load_tokenizer, tokenize_texts, save_training_data};
-use crate::training::filters::{collect_files_with_extension, filter_files_by_content, is_valid_json};
+use crate::training::filters::{collect_files_with_extension, filter_files_by_content, is_valid_json, deduplicate_text_samples};
 use anyhow::Result;
 use safetensors::tensor::TensorView;
 use serde::{Deserialize, Serialize};
@@ -30,7 +30,13 @@ pub async fn prepare_reasoning_training_data(config: &TrainingConfig, problems_p
     }
 
     let texts: Vec<String> = problems.iter().map(|prob| format!("Problem: {}\nSolution: {}", prob.problem, prob.solution)).collect();
-    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &texts, 512)?;
+
+    let original_count = texts.len();
+    // Deduplicate reasoning texts
+    let deduplicated_texts = deduplicate_text_samples(texts);
+    println!("Generated {} reasoning samples, {} after deduplication", original_count, deduplicated_texts.len());
+
+    let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &deduplicated_texts, 512)?;
 
     let input_ids_tensor = TensorView::new(safetensors::Dtype::I64, vec![input_ids.len()], bytemuck::cast_slice(&input_ids))?;
     let attention_masks_tensor = TensorView::new(safetensors::Dtype::I64, vec![attention_masks.len()], bytemuck::cast_slice(&attention_masks))?;
@@ -40,13 +46,13 @@ pub async fn prepare_reasoning_training_data(config: &TrainingConfig, problems_p
     tensors.insert("attention_mask".to_string(), attention_masks_tensor);
 
     let metadata = serde_json::json!({
-        "num_problems": problems.len(),
+        "num_samples": deduplicated_texts.len(),
         "max_len": 512,
         "tokenizer": "data/tokenizer.json",
         "problems_path": problems_path
     });
 
-    save_training_data(tensors, metadata, &training_dir, "reasoning_training_data.safetensors", "reasoning_metadata.json")?;
+    save_training_data(tensors, metadata, &training_dir, "reasoning_training_data.safetensors", "reasoning_metadata.json").await?;
 
     Ok(())
 }

@@ -10,8 +10,10 @@ pub struct ChloeConfig {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Config {
-    /// Path to the model file (e.g., .gguf, .safetensors)
-    pub model: String,
+    /// Path to the model folder
+    pub model_folder: String,
+    /// Name of the model file within the folder
+    pub model_file: String,
     /// Path to the tokenizer file (e.g., .json)
     pub tokenizer: String,
     /// Path to the prompt file (e.g., .md, .txt)
@@ -46,6 +48,10 @@ pub struct TrainingConfig {
     pub output_gguf: String,
     /// Optional path to metadata JSON file
     pub metadata: Option<String>,
+    /// Path to the training corpus
+    pub corpus_path: String,
+    /// Path to the output ONNX file
+    pub output_onnx: String,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -64,8 +70,9 @@ impl ChloeConfig {
     pub fn default_config() -> Self {
         ChloeConfig {
             chloe: Config {
-                model: "Qwen3-4B-Function-Calling.Pro.gguf".to_string(),
-                tokenizer: "tokenizer.json".to_string(),
+                model_folder: "Qwen3-4B-Function-Calling-Pro".to_string(),
+                model_file: "model.gguf".to_string(),
+                tokenizer: "Qwen3-4B-Function-Calling-Pro/tokenizer.json".to_string(),
                 prompt: "prompt.md".to_string(),
                 sample_len: 1000,
                 temperature: 0.7,
@@ -79,9 +86,11 @@ impl ChloeConfig {
                 eos_tokens: vec!["<|im_end|>".to_string(), "<|endoftext|>".to_string()],
             },
             training: Some(TrainingConfig {
-                source_safetensors: "model.safetensors".to_string(),
-                output_gguf: "model.gguf".to_string(),
-                metadata: Some("metadata.json".to_string()),
+                source_safetensors: "Qwen3-4B-Function-Calling-Pro/model.gguf".to_string(),
+                output_gguf: "Qwen3-4B-Function-Calling-Pro/model.gguf".to_string(),
+                metadata: Some("Qwen3-4B-Function-Calling-Pro/config.json".to_string()),
+                corpus_path: "data/corpus.txt".to_string(),
+                output_onnx: "Qwen3-4B-Function-Calling-Pro/model.onnx".to_string(),
             }),
             chat: Some(ChatConfig {
                 prompt: "You are a helpful AI assistant. Respond to the user's message.".to_string(),
