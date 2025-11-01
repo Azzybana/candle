@@ -81,6 +81,22 @@ pub struct Args {
     /// Run on CPU rather than GPU even if a GPU is available.
     #[arg(long)]
     pub cpu: bool,
+
+    /// Run in chat mode.
+    #[arg(long)]
+    pub chat: bool,
+
+    /// Run in code mode.
+    #[arg(long)]
+    pub code: bool,
+
+    /// Run training conversion.
+    #[arg(long)]
+    pub training: bool,
+
+    /// Run in translate mode.
+    #[arg(long)]
+    pub translate: bool,
 }
 
 impl Args {

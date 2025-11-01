@@ -1,6 +1,6 @@
 # Chloe
 
-A standalone Rust project for running quantized Qwen3 models locally.
+A standalone Rust project for running quantized Qwen3 models locally with multiple modes.
 
 ## Usage
 
@@ -19,15 +19,18 @@ You can generate a default config with:
 cargo run -- --generate-config
 ```
 
-This creates `data/config.toml` with default values and `data/prompt.md` if it doesn't exist.
+This creates `data/config.toml` with default values and prompt files if they don't exist.
 
-To generate just the prompt file:
+## Modes
 
-```bash
-cargo run -- --generate-prompt
-```
+Chloe supports different modes for specialized tasks:
 
-This creates `data/prompt.md`.
+- **Default**: General inference with custom prompts.
+- **Chat**: Conversational AI with chat-specific prompts.
+- **Code**: Code generation and assistance.
+- **Training**: Convert SafeTensors models to GGUF format.
+
+Use flags like `--chat`, `--code`, `--training` to select the mode.
 
 ## Configuration
 
@@ -48,16 +51,37 @@ repeat_last_n = 64  # Context size for repeat penalty
 max_context_length = 262144  # Maximum context length in tokens
 prompt_template = "<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"  # Template for prompt formatting
 eos_tokens = ["<|im_end|>", "<|endoftext|>"]  # List of end-of-sequence tokens
+
+[training]
+source_safetensors = "model.safetensors"  # Source SafeTensors file
+output_gguf = "model.gguf"  # Output GGUF file
+metadata = "metadata.json"  # Optional metadata JSON
+
+[chat]
+prompt = "You are a helpful AI assistant. Respond to the user's message."  # Chat mode prompt
+
+[code]
+prompt = "You are a code generation assistant. Generate code based on the user's request."  # Code mode prompt
 ```
 
 Paths are relative to the config file's directory.
+
+## Training Conversion
+
+To convert a SafeTensors model to GGUF:
+
+```bash
+cargo run -- --training
+```
+
+This uses the paths specified in the `[training]` section of the config.
 
 ## Options
 
 - `--model`: Override model path
 - `--tokenizer`: Override tokenizer path
 - `--prompt`: Override prompt file path
-- `--sample-len`: Length of the sample to generate (default: 1000)
+- `--sample-len`: Length of the sample to generate (in tokens)
 - `--temperature`: Sampling temperature (default: 0.7)
 - `--top-p`: Nucleus sampling probability cutoff
 - `--top-k`: Only sample among the top K samples
@@ -73,6 +97,10 @@ Paths are relative to the config file's directory.
 - `--use-prompt`: Specify specific prompt file to use
 - `--use-model`: Specify specific model file to use
 - `--use-tokenizer`: Specify specific tokenizer file to use
+- `--chat`: Run in chat mode
+- `--code`: Run in code mode
+- `--training`: Run training conversion
+- `--translate`: Run in translate mode
 
 Precedence: Command line options override config file values.
 
