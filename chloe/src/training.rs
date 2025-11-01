@@ -1,5 +1,8 @@
 pub mod conversion;
 pub mod code_trainer;
+pub mod text_trainer;
+pub mod conversation_trainer;
+pub mod reasoning_trainer;
 
 use crate::config::default::ChloeConfig;
 use anyhow::Result;
