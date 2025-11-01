@@ -57,4 +57,8 @@ bria.wav
 .vscode/settings.json
 chloe/data/
 chloe/Cargo.lock
-chloe/target/
+chloe/target/chloe/.vscode/settings.json
+chloe/tree.txt
+chloe/.github/prompts/
+chloe/.github/agents/
+chloe/.github/instructions/
