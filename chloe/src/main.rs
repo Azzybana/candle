@@ -84,7 +84,7 @@ fn main() -> anyhow::Result<()> {
     );
     println!(
         "temp: {:.2} repeat-penalty: {:.2} repeat-last-n: {}",
-        args.temperature, args.repeat_penalty, args.repeat_last_n
+        args.effective_temperature(&config.chloe), args.effective_repeat_penalty(&config.chloe), args.effective_repeat_last_n(&config.chloe)
     );
 
     let model_path = args.model_path(&config.chloe, config_dir);
@@ -116,7 +116,7 @@ fn main() -> anyhow::Result<()> {
     let mut tos = TokenOutputStream::new(tokenizer, vocab);
     let prompt_str = args.prompt_content(&config.chloe, config_dir)?;
 
-    let prompt_str = format!("<|im_start|>user\n{prompt_str}<|im_end|>\n<|im_start|>assistant\n");
+    let prompt_str = config.chloe.prompt_template.replace("{prompt}", &prompt_str);
     print!("formatted prompt: {}", &prompt_str);
 
     let tokens = tos
@@ -126,23 +126,23 @@ fn main() -> anyhow::Result<()> {
 
     let tokens = tokens.get_ids();
 
-    let to_sample = args.sample_len.saturating_sub(1);
+    let to_sample = args.effective_sample_len(&config.chloe).saturating_sub(1);
 
     let mut all_tokens = vec![];
 
     let mut logits_processor = {
-        let temperature = args.temperature;
+        let temperature = args.effective_temperature(&config.chloe);
         let sampling = if temperature <= 0. {
             Sampling::ArgMax
         } else {
-            match (args.top_k, args.top_p) {
+            match (args.effective_top_k(&config.chloe), args.effective_top_p(&config.chloe)) {
                 (None, None) => Sampling::All { temperature },
                 (Some(k), None) => Sampling::TopK { k, temperature },
                 (None, Some(p)) => Sampling::TopP { p, temperature },
                 (Some(k), Some(p)) => Sampling::TopKThenTopP { k, p, temperature },
             }
         };
-        LogitsProcessor::from_sampling(args.seed, sampling)
+        LogitsProcessor::from_sampling(args.effective_seed(&config.chloe), sampling)
     };
 
     let start_prompt_processing = std::time::Instant::now();
@@ -172,7 +172,7 @@ fn main() -> anyhow::Result<()> {
         std::io::stdout().flush()?;
     }
 
-    let eos_token = tos.get_token("<|im_end|>").unwrap();
+    let eos_tokens: Vec<u32> = config.chloe.eos_tokens.iter().filter_map(|t| tos.get_token(t)).collect();
 
     let start_post_prompt = std::time::Instant::now();
 
@@ -181,13 +181,13 @@ fn main() -> anyhow::Result<()> {
         let input = Tensor::new(&[next_token], &device)?.unsqueeze(0)?;
         let logits = model.forward(&input, tokens.len() + index)?;
         let logits = logits.squeeze(0)?;
-        let logits = if args.repeat_penalty == 1. {
+        let logits = if args.effective_repeat_penalty(&config.chloe) == 1. {
             logits
         } else {
-            let start_at = all_tokens.len().saturating_sub(args.repeat_last_n);
+            let start_at = all_tokens.len().saturating_sub(args.effective_repeat_last_n(&config.chloe));
             candle_transformers::utils::apply_repeat_penalty(
                 &logits,
-                args.repeat_penalty,
+                args.effective_repeat_penalty(&config.chloe),
                 &all_tokens[start_at..],
             )?
         };
@@ -198,7 +198,7 @@ fn main() -> anyhow::Result<()> {
             std::io::stdout().flush()?;
         }
         sampled += 1;
-        if next_token == eos_token {
+        if eos_tokens.contains(&next_token) {
             break;
         };
     }

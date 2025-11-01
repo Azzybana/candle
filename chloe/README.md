@@ -35,9 +35,19 @@ The `config.toml` file has the following structure:
 
 ```toml
 [chloe]
-model = "model.gguf"  # Path to model file (.gguf, .safetensors, etc.)
+model = "Qwen3-4B-Function-Calling.Pro.gguf"  # Path to model file (.gguf, .safetensors, etc.)
 tokenizer = "tokenizer.json"  # Path to tokenizer file (.json)
 prompt = "prompt.md"  # Path to prompt file (.md, .txt, etc.)
+sample_len = 1000  # Length of the sample to generate (in tokens)
+temperature = 0.7  # Sampling temperature (0 for greedy)
+top_p = 0.8  # Nucleus sampling probability cutoff
+top_k = 20  # Only sample among the top K samples
+seed = 299792458  # Random seed
+repeat_penalty = 1.1  # Penalty for repeating tokens
+repeat_last_n = 64  # Context size for repeat penalty
+max_context_length = 262144  # Maximum context length in tokens
+prompt_template = "<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n"  # Template for prompt formatting
+eos_tokens = ["<|im_end|>", "<|endoftext|>"]  # List of end-of-sequence tokens
 ```
 
 Paths are relative to the config file's directory.
@@ -48,7 +58,7 @@ Paths are relative to the config file's directory.
 - `--tokenizer`: Override tokenizer path
 - `--prompt`: Override prompt file path
 - `--sample-len`: Length of the sample to generate (default: 1000)
-- `--temperature`: Sampling temperature (default: 0.8)
+- `--temperature`: Sampling temperature (default: 0.7)
 - `--top-p`: Nucleus sampling probability cutoff
 - `--top-k`: Only sample among the top K samples
 - `--seed`: Random seed (default: 299792458)
@@ -57,7 +67,6 @@ Paths are relative to the config file's directory.
 - `--cpu`: Run on CPU
 - `--repeat-penalty`: Penalty for repeating tokens (default: 1.1)
 - `--repeat-last-n`: Context size for repeat penalty (default: 64)
-- `--which`: Model size (default: 4b)
 - `--generate-config`: Generate default config.toml (destructive: overwrites existing)
 - `--generate-prompt`: Generate default prompt.md (destructive: overwrites existing)
 - `--use-config`: Specify specific config.toml file to use

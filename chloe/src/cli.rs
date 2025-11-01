@@ -1,23 +1,7 @@
-use clap::{Parser, ValueEnum};
+use clap::Parser;
 use tokenizers::Tokenizer;
 use anyhow::Result;
 use crate::config::Config;
-
-#[derive(Clone, Debug, Copy, PartialEq, Eq, ValueEnum)]
-pub enum Which {
-    #[value(name = "0.6b")]
-    W3_0_6b,
-    #[value(name = "1.7b")]
-    W3_1_7b,
-    #[value(name = "4b")]
-    W3_4b,
-    #[value(name = "8b")]
-    W3_8b,
-    #[value(name = "14b")]
-    W3_14b,
-    #[value(name = "32b")]
-    W3_32b,
-}
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -31,16 +15,16 @@ pub struct Args {
     pub prompt: Option<String>,
 
     /// The length of the sample to generate (in tokens).
-    #[arg(short = 'n', long, default_value_t = 1000)]
-    pub sample_len: usize,
+    #[arg(short = 'n', long)]
+    pub sample_len: Option<usize>,
 
     /// The tokenizer config in json format.
     #[arg(long)]
     pub tokenizer: Option<String>,
 
     /// The temperature used to generate samples, use 0 for greedy sampling.
-    #[arg(long, default_value_t = 0.8)]
-    pub temperature: f64,
+    #[arg(long)]
+    pub temperature: Option<f64>,
 
     /// Nucleus sampling probability cutoff.
     #[arg(long)]
@@ -51,32 +35,16 @@ pub struct Args {
     pub top_k: Option<usize>,
 
     /// The seed to use when generating random samples.
-    #[arg(long, default_value_t = 299792458)]
-    pub seed: u64,
-
-    /// Enable tracing (generates a trace-timestamp.json file).
     #[arg(long)]
-    pub tracing: bool,
-
-    /// Process prompt elements separately.
-    #[arg(long)]
-    pub split_prompt: bool,
-
-    /// Run on CPU rather than GPU even if a GPU is available.
-    #[arg(long)]
-    pub cpu: bool,
+    pub seed: Option<u64>,
 
     /// Penalty to be applied for repeating tokens, 1. means no penalty.
-    #[arg(long, default_value_t = 1.1)]
-    pub repeat_penalty: f32,
+    #[arg(long)]
+    pub repeat_penalty: Option<f32>,
 
     /// The context size to consider for the repeat penalty.
-    #[arg(long, default_value_t = 64)]
-    pub repeat_last_n: usize,
-
-    /// The model size to use.
-    #[arg(long, default_value = "4b")]
-    pub which: Which,
+    #[arg(long)]
+    pub repeat_last_n: Option<usize>,
 
     /// Generate a default config.toml file (destructive: overwrites existing)
     #[arg(long)]
@@ -101,6 +69,18 @@ pub struct Args {
     /// Specify a specific tokenizer file to use
     #[arg(long)]
     pub use_tokenizer: Option<String>,
+
+    /// Enable tracing (generates a trace-timestamp.json file).
+    #[arg(long)]
+    pub tracing: bool,
+
+    /// Process prompt elements separately.
+    #[arg(long)]
+    pub split_prompt: bool,
+
+    /// Run on CPU rather than GPU even if a GPU is available.
+    #[arg(long)]
+    pub cpu: bool,
 }
 
 impl Args {
@@ -120,10 +100,6 @@ impl Args {
 
     pub fn model_path(&self, config: &Config, config_dir: Option<&std::path::Path>) -> String {
         self.effective_model_path(config, config_dir)
-    }
-
-    pub fn prompt_path(&self, config: &Config, config_dir: Option<&std::path::Path>) -> String {
-        self.effective_prompt_path(config, config_dir)
     }
 
     fn effective_tokenizer_path(&self, config: &Config, config_dir: Option<&std::path::Path>) -> String {
@@ -174,5 +150,33 @@ impl Args {
         } else {
             relative_path.to_string()
         }
+    }
+
+    pub fn effective_sample_len(&self, config: &Config) -> usize {
+        self.sample_len.unwrap_or(config.sample_len)
+    }
+
+    pub fn effective_temperature(&self, config: &Config) -> f64 {
+        self.temperature.unwrap_or(config.temperature)
+    }
+
+    pub fn effective_top_p(&self, config: &Config) -> Option<f64> {
+        self.top_p.or(config.top_p)
+    }
+
+    pub fn effective_top_k(&self, config: &Config) -> Option<usize> {
+        self.top_k.or(config.top_k)
+    }
+
+    pub fn effective_seed(&self, config: &Config) -> u64 {
+        self.seed.unwrap_or(config.seed)
+    }
+
+    pub fn effective_repeat_penalty(&self, config: &Config) -> f32 {
+        self.repeat_penalty.unwrap_or(config.repeat_penalty)
+    }
+
+    pub fn effective_repeat_last_n(&self, config: &Config) -> usize {
+        self.repeat_last_n.unwrap_or(config.repeat_last_n)
     }
 }
