@@ -1,4 +1,5 @@
 pub mod conversion;
+pub mod code_trainer;
 
 use crate::config::default::ChloeConfig;
 use anyhow::Result;

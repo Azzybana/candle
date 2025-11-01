@@ -26,3 +26,8 @@
   trash_parallelism = "0.1"
   smol = "2.0"
   safetensors = "0.6"
+  ggus = "0.5"
+  bytemuck = "1.14"
+  ggml-quants = "0.1"
+  syn = { version = "2.0", features = ["full", "visit"] }
+  walkdir = "2.5"
