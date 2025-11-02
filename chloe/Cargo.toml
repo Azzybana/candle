@@ -7,7 +7,6 @@
   rust-version = "1.93"
 
 [dependencies]
-  anyhow = "1.0"
   clap = { version = "4.0", features = ["derive"] }
   candle = { path = "../candle-core", package = "candle-core" }
   candle-nn = { path = "../candle-nn" }
@@ -25,7 +24,6 @@
   toml = { version = "0.9" }
   serde_json = "1.0"
   trash_parallelism = "0.1"
-  smol = "2.0"
   safetensors = "0.6"
   ggus = "0.5"
   bytemuck = "1.14"
@@ -38,3 +36,20 @@
   ] }
   # onnx is not to be used
   protobuf = "4.33.0-release"
+  sentencepiece-sys = { version = "0.12.0", features = [
+    "static"
+  ] }
+  pulp = "0.21.5"
+  libm = "0.2"
+  zerocopy = { version = "0.8", features = [
+    "derive",
+    "simd"
+  ] }
+  once_cell = "1.21"
+  num-traits = { version = "0.2", features = ["libm"] }
+  half = { version = "2.7", features = [
+    "bytemuck",
+    "num-traits",
+    "serde",
+    "zerocopy"
+  ] }
