@@ -10,7 +10,7 @@ use safetensors::tensor::TensorView;
 use std::collections::HashMap;
 use syn::{File, ItemFn, ItemStruct, visit::Visit};
 use trash_parallelism::io::utils::read_file_async;
-use trash_parallelism::channels::core::{bounded_queue_3, send_async, recv_async};
+use trash_parallelism::parallel::advanced::parallel_map_async;
 
 #[allow(dead_code)]
 pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &str) -> Result<()> {
@@ -24,56 +24,21 @@ pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &
     let total_files = valid_code_files.len();
     println!("Found {} valid Rust files to process", total_files);
 
-    // Create a bounded channel for file contents (capacity 10 for good throughput)
-    let (sender, receiver) = bounded_queue_3::<(String, String)>(10);
-
-    // Spawn producer task to read files
-    let producer_handle = smol::spawn(async move {
-        for file in valid_code_files {
+    // Process files in parallel using parallel_map_async
+    let all_code_samples: Vec<String> = parallel_map_async(
+        valid_code_files,
+        |file| async move {
             match read_file_async(&file).await {
-                Ok(content) => {
-                    // Send file path and content through channel
-                    if send_async(&sender, (file, content)).await.is_err() {
-                        eprintln!("Failed to send file content through channel");
-                    }
-                }
-                Err(e) => eprintln!("Failed to read file: {}", e),
+                Ok(content) => abstract_rust_code(&content).unwrap_or_default(),
+                Err(_) => String::new(),
             }
-        }
-        // Drop sender to signal end of data
-        drop(sender);
-    });
-
-    // Spawn consumer tasks to process files
-    let mut consumer_handles = Vec::new();
-    let num_consumers = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(4)
-        .min(4); // Limit to 4 consumers max
-
-    for _ in 0..num_consumers {
-        let receiver = receiver.clone();
-        let handle = smol::spawn(async move {
-            let mut processed_samples = Vec::new();
-            while let Ok((_file_path, content)) = recv_async(&receiver).await {
-                if let Ok(abstracted) = abstract_rust_code(&content) {
-                    processed_samples.push(abstracted);
-                }
-            }
-            processed_samples
-        });
-        consumer_handles.push(handle);
-    }
-
-    // Wait for producer to finish
-    producer_handle.await;
-
-    // Wait for all consumers and collect results
-    let mut all_code_samples = Vec::new();
-    for handle in consumer_handles {
-        let samples = handle.await;
-        all_code_samples.extend(samples);
-    }
+        },
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4)
+            .min(8), // Use up to 8 workers
+    )
+    .await;
 
     println!("Successfully processed {} code samples", all_code_samples.len());
 

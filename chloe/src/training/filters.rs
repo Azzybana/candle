@@ -3,6 +3,7 @@
 use trash_parallelism::sys::path::find_files_parallel;
 use trash_parallelism::sys::Timer;
 use trash_parallelism::chars::core::deduplicate_lines;
+use trash_parallelism::parallel::parallel_filter;
 
 pub fn collect_files_with_extension(dir: &str, ext: &str) -> Vec<String> {
     let _timer = Timer::new("collect_files_with_extension");
@@ -22,18 +23,13 @@ pub fn is_valid_rust_code(content: &str) -> bool {
 
 pub fn filter_files_by_content<P>(files: &[String], predicate: P) -> Vec<String>
 where
-    P: Fn(&str) -> bool,
+    P: Fn(&str) -> bool + Send + Sync,
 {
-    files.iter()
-        .filter(|file| {
-            if let Ok(content) = std::fs::read_to_string(file) {
-                predicate(&content)
-            } else {
-                false
-            }
-        })
-        .cloned()
-        .collect()
+    parallel_filter(files.to_vec(), |file| {
+        std::fs::read_to_string(file)
+            .map(|content| predicate(&content))
+            .unwrap_or(false)
+    })
 }
 
 pub fn deduplicate_text_samples(samples: Vec<String>) -> Vec<String> {

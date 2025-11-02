@@ -10,20 +10,30 @@ use safetensors;
 use safetensors::tensor::TensorView;
 use std::collections::HashMap;
 use std::fs;
+use trash_parallelism::parallel::advanced::parallel_map_async;
 
 pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &str) -> Result<()> {
     let training_dir = create_training_dir(config)?;
     let tokenizer = load_tokenizer()?;
 
     let text_files = collect_files_with_extension(corpus_path, "txt");
-    let mut text_samples = Vec::new();
-    for file in text_files {
-        if let Ok(content) = fs::read_to_string(&file) {
-            text_samples.push(content);
-        }
-    }
+    let original_count = text_files.len();
 
-    let original_count = text_samples.len();
+    // Read files in parallel
+    let text_samples: Vec<String> = parallel_map_async(
+        text_files,
+        |file| async move {
+            fs::read_to_string(&file).unwrap_or_default()
+        },
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4)
+            .min(8),
+    )
+    .await
+    .into_iter()
+    .filter(|s| !s.is_empty())
+    .collect();
     // Deduplicate text samples to improve training quality
     let deduplicated_samples = deduplicate_text_samples(text_samples);
     println!(

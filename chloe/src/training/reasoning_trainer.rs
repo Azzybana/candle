@@ -6,6 +6,7 @@ use safetensors::tensor::TensorView;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use trash_parallelism::parallel::advanced::parallel_map_async;
 
 #[derive(Deserialize, Serialize)]
 #[allow(dead_code)]
@@ -22,15 +23,25 @@ pub async fn prepare_reasoning_training_data(config: &TrainingConfig, problems_p
     let json_files = collect_files_with_extension(problems_path, "json");
     let valid_json_files = filter_files_by_content(&json_files, is_valid_json);
 
-    let mut problems = Vec::new();
-    #[allow(clippy::collapsible_if)]
-    for file in valid_json_files {
-        if let Ok(content) = fs::read_to_string(&file) {
-            if let Ok::<Vec<ReasoningProblem>, _>(data) = serde_json::from_str(&content) {
-                problems.extend(data);
+    // Process JSON files in parallel
+    let problems: Vec<ReasoningProblem> = parallel_map_async(
+        valid_json_files,
+        |file| async move {
+            if let Ok(content) = fs::read_to_string(&file) {
+                serde_json::from_str::<Vec<ReasoningProblem>>(&content).unwrap_or_default()
+            } else {
+                Vec::new()
             }
-        }
-    }
+        },
+        std::thread::available_parallelism()
+            .map(|n| n.get())
+            .unwrap_or(4)
+            .min(8),
+    )
+    .await
+    .into_iter()
+    .flatten()
+    .collect();
 
     let texts: Vec<String> = problems.iter().map(|prob| format!("Problem: {}\nSolution: {}", prob.problem, prob.solution)).collect();
 
