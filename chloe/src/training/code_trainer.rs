@@ -2,15 +2,18 @@ use crate::config::default::TrainingConfig;
 use crate::training::common::{
     create_training_dir, load_tokenizer, save_training_data, tokenize_texts,
 };
-use crate::training::filters::{collect_files_with_extension, filter_files_by_content, is_valid_rust_code, deduplicate_text_samples};
-use trash_parallelism::sys::Timer;
-use trash_parallelism::common::utils::AtomicCounter;
+use crate::training::filters::{
+    collect_files_with_extension, deduplicate_text_samples, filter_files_by_content,
+    is_valid_rust_code,
+};
 use anyhow::Result;
 use safetensors::tensor::TensorView;
 use std::collections::HashMap;
 use syn::{File, ItemFn, ItemStruct, visit::Visit};
+use trash_parallelism::common::utils::AtomicCounter;
 use trash_parallelism::io::utils::read_file_async;
 use trash_parallelism::parallel::advanced::parallel_map_async;
+use trash_parallelism::sys::Timer;
 
 #[allow(dead_code)]
 pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &str) -> Result<()> {
@@ -40,11 +43,17 @@ pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &
     )
     .await;
 
-    println!("Successfully processed {} code samples", all_code_samples.len());
+    println!(
+        "Successfully processed {} code samples",
+        all_code_samples.len()
+    );
 
     // Deduplicate samples to reduce training data size and improve quality
     let deduplicated_samples = deduplicate_text_samples(all_code_samples);
-    println!("After deduplication: {} unique code samples", deduplicated_samples.len());
+    println!(
+        "After deduplication: {} unique code samples",
+        deduplicated_samples.len()
+    );
 
     let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &deduplicated_samples, 512)?;
 
@@ -76,7 +85,8 @@ pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &
         &training_dir,
         "training_data.safetensors",
         "metadata.json",
-    ).await?;
+    )
+    .await?;
 
     Ok(())
 }
