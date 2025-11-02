@@ -22,9 +22,7 @@ pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &s
     // Read files in parallel
     let text_samples: Vec<String> = parallel_map_async(
         text_files,
-        |file| async move {
-            fs::read_to_string(&file).unwrap_or_default()
-        },
+        |file| async move { fs::read_to_string(&file).unwrap_or_default() },
         std::thread::available_parallelism()
             .map(|n| n.get())
             .unwrap_or(4)
