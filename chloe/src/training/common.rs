@@ -1,5 +1,6 @@
 use crate::config::default::TrainingConfig;
 use anyhow::Result;
+use rust_tokenizers::tokenizer::Gpt2Tokenizer;
 use safetensors::tensor::TensorView;
 use std::collections::HashMap;
 use std::fs;
@@ -21,6 +22,14 @@ pub fn load_tokenizer() -> Result<Tokenizer> {
     let tokenizer_path = "data/tokenizer.json";
     Tokenizer::from_file(tokenizer_path)
         .map_err(|e| anyhow::anyhow!("Failed to load tokenizer: {}", e))
+}
+
+pub fn load_rust_tokenizer() -> Result<Gpt2Tokenizer> {
+    // Assuming the tokenizer is saved as a file, e.g., vocab and merges
+    // For GPT2, it might need vocab and merges files
+    // Placeholder: adjust based on actual API
+    Gpt2Tokenizer::from_file("data/rust_tokenizer.json")
+        .map_err(|e| anyhow::anyhow!("Failed to load Rust tokenizer: {}", e))
 }
 
 pub fn tokenize_texts(
