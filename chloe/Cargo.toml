@@ -37,4 +37,4 @@
     "proto-compile"
   ] }
   # onnx is not to be used
-  protobuf = "4.33"
+  protobuf = "4.33.0-release"
