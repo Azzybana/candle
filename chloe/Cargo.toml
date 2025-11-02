@@ -36,5 +36,5 @@
   rust_tokenizers = { version = "8.1.1", features = [
     "proto-compile"
   ] }
-  onnx = "0.1"
-  protobuf = "3.2"
+  # onnx is not to be used
+  protobuf = "4.33"
