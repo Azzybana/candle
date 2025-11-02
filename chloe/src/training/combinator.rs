@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use anyhow::Result;
 use safetensors::tensor::TensorView;
 use safetensors::SafeTensors;

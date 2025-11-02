@@ -1,13 +1,15 @@
 use crate::config::default::TrainingConfig;
-use crate::training::common::{create_training_dir, load_tokenizer, tokenize_texts, save_training_data};
+use crate::training::common::{
+    create_training_dir, load_tokenizer, save_training_data, tokenize_texts,
+};
 use crate::training::filters::{collect_files_with_extension, deduplicate_text_samples};
 use anyhow::Result;
-use std::collections::HashMap;
-use std::fs;
 use candle::{DType, Device, Tensor};
-use candle_nn::{loss, AdamW, Embedding, Linear, Module, Optimizer, VarMap};
+use candle_nn::{AdamW, Embedding, Linear, Module, Optimizer, VarMap, loss};
 use safetensors;
 use safetensors::tensor::TensorView;
+use std::collections::HashMap;
+use std::fs;
 
 pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &str) -> Result<()> {
     let training_dir = create_training_dir(config)?;
@@ -24,12 +26,24 @@ pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &s
     let original_count = text_samples.len();
     // Deduplicate text samples to improve training quality
     let deduplicated_samples = deduplicate_text_samples(text_samples);
-    println!("Loaded {} text samples, {} after deduplication", original_count, deduplicated_samples.len());
+    println!(
+        "Loaded {} text samples, {} after deduplication",
+        original_count,
+        deduplicated_samples.len()
+    );
 
     let (input_ids, attention_masks) = tokenize_texts(&tokenizer, &deduplicated_samples, 512)?;
 
-    let input_ids_tensor = TensorView::new(safetensors::Dtype::I64, vec![input_ids.len()], bytemuck::cast_slice(&input_ids))?;
-    let attention_masks_tensor = TensorView::new(safetensors::Dtype::I64, vec![attention_masks.len()], bytemuck::cast_slice(&attention_masks))?;
+    let input_ids_tensor = TensorView::new(
+        safetensors::Dtype::I64,
+        vec![input_ids.len()],
+        bytemuck::cast_slice(&input_ids),
+    )?;
+    let attention_masks_tensor = TensorView::new(
+        safetensors::Dtype::I64,
+        vec![attention_masks.len()],
+        bytemuck::cast_slice(&attention_masks),
+    )?;
 
     let mut tensors = HashMap::new();
     tensors.insert("input_ids".to_string(), input_ids_tensor);
@@ -42,7 +56,14 @@ pub async fn prepare_text_training_data(config: &TrainingConfig, corpus_path: &s
         "corpus_path": corpus_path
     });
 
-    save_training_data(tensors, metadata, &training_dir, "text_training_data.safetensors", "text_metadata.json").await?;
+    save_training_data(
+        tensors,
+        metadata,
+        &training_dir,
+        "text_training_data.safetensors",
+        "text_metadata.json",
+    )
+    .await?;
 
     Ok(())
 }
@@ -57,19 +78,15 @@ pub async fn train_text_model(config: &TrainingConfig) -> Result<()> {
     let tensors = safetensors::SafeTensors::deserialize(&data)?;
 
     let input_ids = tensors.tensor("input_ids")?;
-    let attention_mask = tensors.tensor("attention_mask")?;
+    let attention_mask_view = tensors.tensor("attention_mask")?;
 
     // Convert to Candle tensors
-    let input_ids = Tensor::from_raw_buffer(
-        input_ids.data(),
+    let input_ids =
+        Tensor::from_raw_buffer(input_ids.data(), DType::I64, input_ids.shape(), &device)?;
+    let _attention_mask = Tensor::from_raw_buffer(
+        attention_mask_view.data(),
         DType::I64,
-        input_ids.shape(),
-        &device,
-    )?;
-    let attention_mask = Tensor::from_raw_buffer(
-        attention_mask.data(),
-        DType::I64,
-        attention_mask.shape(),
+        attention_mask_view.shape(),
         &device,
     )?;
 
@@ -79,8 +96,32 @@ pub async fn train_text_model(config: &TrainingConfig) -> Result<()> {
     let num_classes = 2; // Binary classification example
 
     let varmap = VarMap::new();
-    let embedding: Embedding = Embedding::new(varmap.get((vocab_size, hidden_size), "embed", candle_nn::Init::Randn { mean: 0.0, stdev: 0.02 }, DType::F32, &device)?, hidden_size);
-    let linear: Linear = Linear::new(varmap.get((hidden_size, num_classes), "linear", candle_nn::Init::Randn { mean: 0.0, stdev: 0.02 }, DType::F32, &device)?, None);
+    let embedding: Embedding = Embedding::new(
+        varmap.get(
+            (vocab_size, hidden_size),
+            "embed",
+            candle_nn::Init::Randn {
+                mean: 0.0,
+                stdev: 0.02,
+            },
+            DType::F32,
+            &device,
+        )?,
+        hidden_size,
+    );
+    let linear: Linear = Linear::new(
+        varmap.get(
+            (hidden_size, num_classes),
+            "linear",
+            candle_nn::Init::Randn {
+                mean: 0.0,
+                stdev: 0.02,
+            },
+            DType::F32,
+            &device,
+        )?,
+        None,
+    );
 
     // Dummy labels (for demonstration - in practice, load real labels)
     let batch_size = 4;
@@ -115,7 +156,11 @@ pub async fn train_text_model(config: &TrainingConfig) -> Result<()> {
             num_batches += 1;
         }
 
-        println!("Epoch {}: Average loss = {:.4}", epoch + 1, total_loss / num_batches as f32);
+        println!(
+            "Epoch {}: Average loss = {:.4}",
+            epoch + 1,
+            total_loss / num_batches as f32
+        );
     }
 
     // Save trained model using Candle's serialization (SafeTensors)
@@ -130,4 +175,3 @@ pub async fn train_text_model(config: &TrainingConfig) -> Result<()> {
     println!("Trained model saved to: {}", model_path.display());
     Ok(())
 }
-

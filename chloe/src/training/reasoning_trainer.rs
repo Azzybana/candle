@@ -8,11 +8,13 @@ use std::collections::HashMap;
 use std::fs;
 
 #[derive(Deserialize, Serialize)]
+#[allow(dead_code)]
 struct ReasoningProblem {
     problem: String,
     solution: String,
 }
 
+#[allow(dead_code)]
 pub async fn prepare_reasoning_training_data(config: &TrainingConfig, problems_path: &str) -> Result<()> {
     let training_dir = create_training_dir(config)?;
     let tokenizer = load_tokenizer()?;
@@ -21,6 +23,7 @@ pub async fn prepare_reasoning_training_data(config: &TrainingConfig, problems_p
     let valid_json_files = filter_files_by_content(&json_files, is_valid_json);
 
     let mut problems = Vec::new();
+    #[allow(clippy::collapsible_if)]
     for file in valid_json_files {
         if let Ok(content) = fs::read_to_string(&file) {
             if let Ok::<Vec<ReasoningProblem>, _>(data) = serde_json::from_str(&content) {

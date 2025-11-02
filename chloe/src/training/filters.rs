@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use trash_parallelism::sys::path::find_files_parallel;
 use trash_parallelism::sys::Timer;
 use trash_parallelism::chars::core::deduplicate_lines;

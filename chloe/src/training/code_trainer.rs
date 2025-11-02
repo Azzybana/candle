@@ -12,9 +12,10 @@ use syn::{File, ItemFn, ItemStruct, visit::Visit};
 use trash_parallelism::io::utils::read_file_async;
 use trash_parallelism::channels::core::{bounded_queue_3, send_async, recv_async};
 
+#[allow(dead_code)]
 pub async fn prepare_code_training_data(config: &TrainingConfig, project_path: &str) -> Result<()> {
     let _overall_timer = Timer::new("prepare_code_training_data");
-    let processed_counter = AtomicCounter::new();
+    let _processed_counter = AtomicCounter::new();
     let training_dir = create_training_dir(config)?;
     let tokenizer = load_tokenizer()?;
 
